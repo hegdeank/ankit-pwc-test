@@ -1,28 +1,36 @@
 import * as React from "react";
 import { Provider, Flex, Text, Button, Header, List } from "@fluentui/react-northstar";
-import { useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
 import * as microsoftTeams from "@microsoft/teams-js";
 import jwtDecode from "jwt-decode";
 
+import { NavMenu } from "./components/NavMenu";
+import { GuestForm } from "./components/GuestForm";
 
 /**
- * Implementation of the Pwc Collab Tab content page
+ * The Main Tab View
  */
 export const PwcCollabTab = () => {
-
   const [{ inTeams, theme, context }] = useTeams();
   const [entityId, setEntityId] = useState<string | undefined>();
   const [name, setName] = useState<string>();
   const [error, setError] = useState<string>();
+  const [selectedMenuItem, setSelectedMenuItem] = useState('add');
 
   const [ssoToken, setSsoToken] = useState<string>();
   const [msGraphOboToken, setMsGraphOboToken] = useState<string>();
   const [recentMail, setRecentMail] = useState<any[]>();
+  const [users, setUsers] = useState<any[]>();
 
+  /**
+   * Initially checks to see if the app is running in an instance of Teams
+   */
   useEffect(() => {
     if (inTeams === true) {
       microsoftTeams.authentication.getAuthToken({
+        // If the app is able to successfully retrieve an AuthToken, it will 
+        // save it to state
         successCallback: (token: string) => {
           const decoded: { [key: string]: any; } = jwtDecode(token) as { [key: string]: any; };
           setName(decoded!.name);
@@ -43,12 +51,18 @@ export const PwcCollabTab = () => {
     }
   }, [inTeams]);
 
+  /**
+   * Get context of the Teams tab
+   */
   useEffect(() => {
     if (context) {
       setEntityId(context.entityId);
     }
   }, [context]);
 
+  /**
+   * Sets the MsGraphOboToken for the Graph API
+   */
   const exchangeSsoTokenForOboToken = useCallback(async () => {
     const response = await fetch(`/exchangeSsoTokenForOboToken/?ssoToken=${ssoToken}`);
     const responsePayload = await response.json();
@@ -70,6 +84,10 @@ export const PwcCollabTab = () => {
     }
   }, [exchangeSsoTokenForOboToken, ssoToken]);
 
+
+  /**
+   * Test function to GET emails of current user
+   */
   const getRecentEmails = useCallback(async () => {
     if (!msGraphOboToken) { return; }
 
@@ -94,40 +112,88 @@ export const PwcCollabTab = () => {
     }
   }, [msGraphOboToken]);
 
-  useEffect(() => {
-    getRecentEmails();
+  /**
+   * Test function to GET users of organization
+   * Runs once the msGraphOboToken is fetched
+   */
+  const getUsers = useCallback(async () => {
+    if (!msGraphOboToken) { return; }
+
+    // Endpoint fetches users and selects ID, display name, user type, and user state
+    const endpoint = "https://graph.microsoft.com/v1.0/users?$select=id,displayName,userType,externalUserState";
+    const requestObject = {
+      method: "GET",
+      headers: {
+        authorization: "bearer " + msGraphOboToken
+      }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    const responsePayload = await response.json();
+
+    // Parse response and save to state
+    if (response.ok) {
+      const userResponse = responsePayload.value.map((user: any) => ({
+        key: user.id,
+        header: user.displayName,
+        headerMedia: user.userType
+      }));
+      setUsers(userResponse);
+    }
   }, [msGraphOboToken]);
 
   /**
- * The render() method to create the UI of the tab
- */
+   * Automatic API calls
+   * Runs once msGraphOboToken is set
+   */
+  useEffect(() => {
+    getRecentEmails();
+    getUsers();
+  }, [msGraphOboToken]);
+
+  /**
+   * Handles the menu
+   */
+  const handleMenuSelect = (selected) => {
+    setSelectedMenuItem(selected);
+  }
+
+  /**
+   * The render() method to create the UI of the tab
+   */
   return (
     <Provider theme={theme}>
       <Flex fill={true} column styles={{
         padding: ".8rem 0 .8rem .5rem"
       }}>
         <Flex.Item>
-          <Header content="This is your tab" />
+          <Header content="Guest Collaboration" />
         </Flex.Item>
-        <Flex.Item>
-          <div>
-            <div>
-              <Text content={`Hello ${name}`} />
-            </div>
-            {recentMail && <div><h3>Your recent emails:</h3><List items={recentMail} /></div>}
+        <Text weight="semibold" content={`Current User: ${name}`} />
+        {error && <div><Text content={`An SSO error occurred ${error}`} /></div>}
+      </Flex>
 
-            {error && <div><Text content={`An SSO error occurred ${error}`} /></div>}
+      <NavMenu selected={selectedMenuItem} callback={handleMenuSelect} />
 
-            <div>
-              <Button onClick={() => alert("It worked!")}>A sample button</Button>
-            </div>
+      <Flex styles={{
+        padding: ".8rem 1rem .8rem .8rem"
+      }}>
+        {selectedMenuItem === "add" && (
+          <div style={{
+            width: "100%"
+          }}>
+            <GuestForm />
           </div>
-        </Flex.Item>
-        <Flex.Item styles={{
-          padding: ".8rem 0 .8rem .5rem"
-        }}>
-          <Text size="smaller" content="(C) Copyright Contoso" />
-        </Flex.Item>
+        )}
+
+        {selectedMenuItem === "status" && (
+          <Fragment>{users && <div><h3>Your users:</h3><List items={users} /></div>}</Fragment>
+        )}
+
+        {selectedMenuItem === "faq" && (
+          <Fragment>Add Documentation here</Fragment>
+        )}
       </Flex>
     </Provider>
   );

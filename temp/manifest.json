@@ -6,9 +6,9 @@
   "packageName": "pwccollabtab",
   "developer": {
     "name": "PwC Capstone",
-    "websiteUrl": "https://5c8e-35-11-215-246.ngrok.io",
-    "privacyUrl": "https://5c8e-35-11-215-246.ngrok.io/privacy.html",
-    "termsOfUseUrl": "https://5c8e-35-11-215-246.ngrok.io/tou.html"
+    "websiteUrl": "https://a8ad-35-11-215-246.ngrok.io",
+    "privacyUrl": "https://a8ad-35-11-215-246.ngrok.io/privacy.html",
+    "termsOfUseUrl": "https://a8ad-35-11-215-246.ngrok.io/tou.html"
   },
   "name": {
     "short": "PwC Collab Tab",
@@ -25,7 +25,7 @@
   "accentColor": "#D85028",
   "configurableTabs": [
     {
-      "configurationUrl": "https://5c8e-35-11-215-246.ngrok.io/pwcCollabTab/config.html?name={loginHint}&tenant={tid}&group={groupId}&theme={theme}",
+      "configurationUrl": "https://a8ad-35-11-215-246.ngrok.io/pwcCollabTab/config.html?name={loginHint}&tenant={tid}&group={groupId}&theme={theme}",
       "canUpdateConfiguration": true,
       "scopes": [
         "team"
@@ -41,11 +41,11 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "5c8e-35-11-215-246.ngrok.io"
+    "a8ad-35-11-215-246.ngrok.io"
   ],
   "showLoadingIndicator": false,
   "webApplicationInfo": {
     "id": "756fa64b-b117-4849-89bc-65bd3399e553",
-    "resource": "api://5c8e-35-11-215-246.ngrok.io/756fa64b-b117-4849-89bc-65bd3399e553"
+    "resource": "api://a8ad-35-11-215-246.ngrok.io/756fa64b-b117-4849-89bc-65bd3399e553"
   }
 }
