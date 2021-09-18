@@ -1,0 +1,51 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.10/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.10",
+  "id": "cb087e30-1804-11ec-8f6a-21c14f121e76",
+  "version": "0.0.1",
+  "packageName": "pwccollabtab",
+  "developer": {
+    "name": "PwC Capstone",
+    "websiteUrl": "https://5c8e-35-11-215-246.ngrok.io",
+    "privacyUrl": "https://5c8e-35-11-215-246.ngrok.io/privacy.html",
+    "termsOfUseUrl": "https://5c8e-35-11-215-246.ngrok.io/tou.html"
+  },
+  "name": {
+    "short": "PwC Collab Tab",
+    "full": "PwC Collab Tab"
+  },
+  "description": {
+    "short": "TODO: add short description here",
+    "full": "TODO: add full description here"
+  },
+  "icons": {
+    "outline": "icon-outline.png",
+    "color": "icon-color.png"
+  },
+  "accentColor": "#D85028",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://5c8e-35-11-215-246.ngrok.io/pwcCollabTab/config.html?name={loginHint}&tenant={tid}&group={groupId}&theme={theme}",
+      "canUpdateConfiguration": true,
+      "scopes": [
+        "team"
+      ]
+    }
+  ],
+  "staticTabs": [],
+  "bots": [],
+  "connectors": [],
+  "composeExtensions": [],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "5c8e-35-11-215-246.ngrok.io"
+  ],
+  "showLoadingIndicator": false,
+  "webApplicationInfo": {
+    "id": "756fa64b-b117-4849-89bc-65bd3399e553",
+    "resource": "api://5c8e-35-11-215-246.ngrok.io/756fa64b-b117-4849-89bc-65bd3399e553"
+  }
+}
