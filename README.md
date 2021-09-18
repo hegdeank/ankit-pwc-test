@@ -1,7 +1,5 @@
 # PwC Collab Tab
 
-# PwC Collab Tab
-
 ## Before running the app locally
 
 If you are not part of the *pwcteamsbot* tenant, ask Sean or Zach to add you. New Users are added [here](https://admin.microsoft.com/Adminportal/Home#/users). 
