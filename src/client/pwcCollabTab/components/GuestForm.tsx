@@ -106,10 +106,12 @@ export function GuestForm() {
         )}
         <Button primary content="Enter" onClick={handleSubmit}/>
       </Flex>
-      {error && (
-        <Text error content={error}/>
-      )}
-      <List selectable items={listItems} horizontal />
+      <Flex column gap='gap.small'>
+        {error && (
+          <Text error content={error}/>
+        )}
+        <List selectable items={listItems} horizontal />
+      </Flex>
     </Fragment>
   );
 }
