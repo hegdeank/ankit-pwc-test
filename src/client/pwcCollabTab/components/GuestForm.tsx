@@ -1,12 +1,13 @@
-import * as React from 'react';
+import * as React from "react";
 import { Fragment, useEffect, useState } from "react";
-import { Button, Flex, Input, List } from "@fluentui/react-northstar";
+import { Button, Flex, Input, List, Text } from "@fluentui/react-northstar";
 import { CloseIcon } from '@fluentui/react-icons-northstar'
 
 export function GuestForm() {
-  const [guestsInput, setGuestsInput] = useState('');     // String input
+  const [guestsInput, setGuestsInput] = useState<string>(""); // String input
   const [guests, setGuests] = useState<string[]>([]);     // Array of Guests
   const [listItems, setListItems] = useState<any[]>([]);  // Array of List Items
+  const [error, setError] = useState<string>("");
   
   const handleInput = (event : any, behavior: any) => {
     setGuestsInput(behavior.value);
@@ -15,8 +16,28 @@ export function GuestForm() {
   // On submit, guestInput will be separated out into individual strings,
   // delimited by commas, and added into guests.
   const handleSubmit = () => {
-    setGuests([...guests, ...guestsInput.split(',')]);
-    setGuestsInput('');
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    const guestSplit = guestsInput.split(',');
+    let addGuest: string[] = [];
+    let rejectGuest: string = "";
+
+    for (let guest of guestSplit) {
+      guest = guest.trim().toLowerCase();
+      if (re.test(guest)) {
+        addGuest.push(guest);
+      } else {
+        rejectGuest += guest + ", ";
+      }
+    }
+
+    if (rejectGuest !== "") {
+      setError("Enter in valid emails, delimited by commas, as input")
+    } else {
+      setError("");
+    }
+
+    setGuests([...guests, ...addGuest]);
+    setGuestsInput(rejectGuest.slice(0, -2));
   }
 
   // When guests is updated, update listItems
@@ -77,9 +98,17 @@ export function GuestForm() {
   return (
     <Fragment>
       <Flex gap='gap.small' hAlign='center' vAlign='center'>
-        <Input fluid id='guests' value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
+        {error && (
+          <Input error fluid id='guests' value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
+        )}
+        {!error && (
+          <Input fluid id='guests' value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
+        )}
         <Button primary content="Enter" onClick={handleSubmit}/>
       </Flex>
+      {error && (
+        <Text error content={error}/>
+      )}
       <List selectable items={listItems} horizontal />
     </Fragment>
   );
