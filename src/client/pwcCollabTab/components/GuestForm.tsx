@@ -2,7 +2,7 @@ import * as React from "react";
 import { Fragment, useEffect, useState } from "react";
 import { Button, Flex, Input, List, Form, FormField, FormLabel, FormMessage, Text, Header, Pill, PillGroup } from "@fluentui/react-northstar";
 import { CloseIcon } from '@fluentui/react-icons-northstar'
-import { invite } from "../GraphService";
+import { invite, addTeamMember } from "../GraphService";
 
 export function GuestForm(props) {
   const [guestsInput, setGuestsInput] = useState<string>(""); // String input

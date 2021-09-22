@@ -16,6 +16,7 @@ import { GuestList } from "./components/GuestList";
 export const PwcCollabTab = () => {
   const [{ inTeams, theme, context }] = useTeams();
   const [entityId, setEntityId] = useState<string | undefined>();
+  const [teamId, setTeamId] = useState<string | undefined>();
   const [name, setName] = useState<string>();
   const [error, setError] = useState<string>();
   const [selectedMenuItem, setSelectedMenuItem] = useState('add');
@@ -36,10 +37,9 @@ export const PwcCollabTab = () => {
         // save it to state
         successCallback: (token: string) => {
           const decoded: { [key: string]: any; } = jwtDecode(token) as { [key: string]: any; };
-          console.log("yo");
-          console.log(decoded);
           setName(decoded!.name);
           setSsoToken(token);
+          console.log(context);
           microsoftTeams.appInitialization.notifySuccess();
         },
         failureCallback: (message: string) => {
@@ -62,6 +62,7 @@ export const PwcCollabTab = () => {
   useEffect(() => {
     if (context) {
       setEntityId(context.entityId);
+      setTeamId(context.groupId);
     }
   }, [context]);
 
@@ -117,7 +118,7 @@ export const PwcCollabTab = () => {
         )}
 
         {selectedMenuItem === "status" && (
-          <GuestList token={msGraphOboToken} />
+          <GuestList token={msGraphOboToken} teamId={teamId} />
         )}
 
         {selectedMenuItem === "faq" && (
