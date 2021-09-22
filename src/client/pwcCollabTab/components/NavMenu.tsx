@@ -24,6 +24,6 @@ export function NavMenu(props) {
   });
 
   return (
-    <Menu defaultActiveIndex={0} items={menuItems} underlined primary/>
+    <Menu defaultActiveIndex={0} items={menuItems} vertical pointing />
   );
 }

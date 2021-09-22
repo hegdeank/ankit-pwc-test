@@ -10,8 +10,12 @@
     "lint": "eslint ./src --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@azure/identity": "^1.5.2",
+    "@azure/msal-browser": "^2.17.0",
     "@fluentui/react-northstar": "~0.56.0",
+    "@microsoft/microsoft-graph-client": "^3.0.0",
     "@microsoft/teams-js": "~1.10.0",
+    "@microsoft/teamsfx": "^0.2.6",
     "axios": "^0.21.1",
     "botbuilder": "4.11.1",
     "botbuilder-dialogs": "4.11.1",
@@ -21,11 +25,11 @@
     "express": "4.16.4",
     "express-msteams-host": "1.7.0",
     "express-session": "1.15.6",
+    "jwt-decode": "^3.1.2",
     "morgan": "1.9.1",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
     "msteams-react-base-component": "^3.1.0",
-    "jwt-decode": "^3.1.2"
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   },
   "devDependencies": {
     "@types/debug": "4.1.5",

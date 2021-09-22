@@ -62,6 +62,9 @@ express.use("/", Express.static(path.join(__dirname, "web/"), {
     index: "index.html"
 }));
 
+// Set the port
+express.set("port", port);
+
 express.get("/exchangeSsoTokenForOboToken", async (req, res) => {
   log("getting access token for Microsoft Graph...");
 
@@ -115,9 +118,6 @@ express.get("/exchangeSsoTokenForOboToken", async (req, res) => {
     res.status(400).json({ error: `Unknown error: ${error}` });
   }
 });
-
-// Set the port
-express.set("port", port);
 
 // Start the webserver
 http.createServer(express).listen(port, () => {

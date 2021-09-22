@@ -1,13 +1,14 @@
 import * as React from "react";
 import { Fragment, useEffect, useState } from "react";
-import { Button, Flex, Input, List, Text } from "@fluentui/react-northstar";
+import { Button, Flex, Input, List, Form, FormField, FormLabel, FormMessage, Text, Header, Pill, PillGroup } from "@fluentui/react-northstar";
 import { CloseIcon } from '@fluentui/react-icons-northstar'
+import { invite } from "../GraphService";
 
-export function GuestForm() {
+export function GuestForm(props) {
   const [guestsInput, setGuestsInput] = useState<string>(""); // String input
   const [guests, setGuests] = useState<string[]>([]);     // Array of Guests
-  const [listItems, setListItems] = useState<any[]>([]);  // Array of List Items
   const [error, setError] = useState<string>("");
+  const token = props.token;
   
   const handleInput = (event : any, behavior: any) => {
     setGuestsInput(behavior.value);
@@ -40,42 +41,29 @@ export function GuestForm() {
     setGuestsInput(rejectGuest.slice(0, -2));
   }
 
-  // When guests is updated, update listItems
-  // Create new listItems from the state of guests
-  useEffect(() => {
-    setListItems(guests.map((guest, index) => {
-      return (
-        {
-          key: index,
-          content: guest,
-          endMedia: <CloseIcon size="smallest" />,
-          onClick: handleRemove
-        }
-      );
-    }))
-  }, [guests])
-
   // When a List Item is clicked, this function is called to remove the
   // selected item. The click event carries the name of the guest, and that
   // name is filtered out from the guests list.
-  const handleRemove = (event : any, behavior: any) => {
-    setGuests(guests.filter(guest => guest !== behavior.content));
+  const handleRemove = (event : any, data: any) => {
+    setGuests(guests.filter(guest => guest !== data.children));
   }
 
-  // Internal users are added and created into a team
-  // Invite guests to be added to this existing team
+  const triggerInvite = async () => {
+    if (!token) { return; }
 
-  // const invite = async () => {
-  //   const invitation = {
-  //     invitedUserEmailAddress: 'nguye610@msu.edu',
-  //     sendInvitationMessage: true,
-  //     inviteRedirectUrl: 'https://localhost:3000'
-  //   }
+    for (let guest of guests) {
+      const invitation = {
+        invitedUserEmailAddress: guest,
+        sendInvitationMessage: true,
+        inviteRedirectUrl: 'https://localhost:3000'
+      }
+  
+      const responsePayload = await invite(token, invitation);
+      console.log(responsePayload);
+    }
 
-  //   graph.api('invitations').post(invitation).then(() => {
-  //     setInvited(true);
-  //   });
-  // }
+    setGuests([]);
+  }
 
   // 6 external guests to invite (names & emails)
   // Keep GRP in automated -> test with static API
@@ -97,20 +85,43 @@ export function GuestForm() {
   // (As evidenced by <Flex>, <Input /> and <Button />)
   return (
     <Fragment>
-      <Flex gap='gap.small' hAlign='center' vAlign='center'>
-        {error && (
-          <Input error fluid id='guests' value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
-        )}
-        {!error && (
-          <Input fluid id='guests' value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
-        )}
-        <Button primary content="Enter" onClick={handleSubmit}/>
-      </Flex>
-      <Flex column gap='gap.small'>
+      <Flex column fill={true}>
+        <Form onSubmit={handleSubmit}>
+          <Header as="h2" content="Invite external users" />
+          <Text content="Enter external users' emails one by one, or separated by commas." />
+          <FormField>
+            <Flex fill={true} gap="gap.medium">
+              {error && (
+                <Input fluid error value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
+              )}
+              {!error && (
+                <Input fluid value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
+              )}
+              <Button>Submit</Button>
+            </Flex>
+          </FormField>
+        </Form>
         {error && (
           <Text error content={error}/>
         )}
-        <List selectable items={listItems} horizontal />
+
+        <PillGroup>
+          {
+            guests.map(guest =>
+              <Pill
+                actionable
+                onDismiss={handleRemove}
+              >
+                {guest}
+              </Pill>
+            )
+          }
+        </PillGroup>
+        <Flex hAlign="center">
+          {guests.length > 0 && (
+            <Button primary content="Invite Users" onClick={triggerInvite}/>
+          )}
+        </Flex>
       </Flex>
     </Fragment>
   );
