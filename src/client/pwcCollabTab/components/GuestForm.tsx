@@ -1,21 +1,25 @@
 import * as React from "react";
 import { Fragment, useEffect, useState } from "react";
-import { Button, Flex, Input, List, Form, FormField, FormLabel, FormMessage, Text, Header, Pill, PillGroup,TextArea } from "@fluentui/react-northstar";
-import { CloseIcon } from '@fluentui/react-icons-northstar'
+import { 
+  Button, Flex, Input, Form, FormField, Divider,
+  Text, Header, Pill, PillGroup, TextArea 
+} from "@fluentui/react-northstar";
 import { invite, addTeamMember } from "../GraphService";
 
 export function GuestForm(props) {
   const [guestsInput, setGuestsInput] = useState<string>(""); // String input
-  const [guestsMSG, setGuestsMSG] = useState<string>(""); // String MSG input
+  const [inviteMessage, setInviteMessage] = useState<string>(""); // String MSG input
   const [guests, setGuests] = useState<string[]>([]);     // Array of Guests
   const [error, setError] = useState<string>("");
+  const [invitedPayloads, setInvitedPayloads] = useState<any[]>([]);
   const token = props.token;
+  const teamId = props.teamId;
   
-  const handleInput = (event : any, behavior: any) => {
-    setGuestsInput(behavior.value);
+  const handleGuestInput = (event : any, data: any) => {
+    setGuestsInput(data.value);
   }
-  const handleInputMSG = (event : any, behavior: any) => {
-    setGuestsMSG(behavior.value);
+  const handleMessageInput = (event : any, data: any) => {
+    setInviteMessage(data.value);
   }
 
   // On submit, guestInput will be separated out into individual strings,
@@ -45,10 +49,6 @@ export function GuestForm(props) {
     setGuestsInput(rejectGuest.slice(0, -2));
   }
 
-  const handleMSG= () => {
-    
-  }
-
   // When a List Item is clicked, this function is called to remove the
   // selected item. The click event carries the name of the guest, and that
   // name is filtered out from the guests list.
@@ -60,24 +60,33 @@ export function GuestForm(props) {
   // make sure you check the grammer before changing it
   // Link: https://docs.microsoft.com/en-us/graph/api/resources/invitedusermessageinfo?view=graph-rest-1.0#json-representation
   const triggerInvite = async () => {
-    console.log("Check: "+guestsMSG);
     if (!token) { return; }
 
     for (let guest of guests) {
       const invitation = {
         invitedUserEmailAddress: guest,
-        invitedUserMessageInfo: {customizedMessageBody: guestsMSG},
+        invitedUserMessageInfo: { customizedMessageBody: inviteMessage },
         sendInvitationMessage: true,
         inviteRedirectUrl: 'https://localhost:3000'
       }
-  
+
       const responsePayload = await invite(token, invitation);
-      console.log(responsePayload);
+      setInvitedPayloads([...invitedPayloads, ...[responsePayload]]);
     }
 
     setGuests([]);
-    setGuestsMSG("");
+    setInviteMessage("");
   }
+
+  useEffect(() => {
+    async function addUser() {
+      for (let guest of invitedPayloads) {
+        guest = guest.invitedUser.id;
+        const responsePayload = await addTeamMember(token, teamId, guest);
+      }
+    }
+    addUser();
+  }, [invitedPayloads]);
 
   // 6 external guests to invite (names & emails)
   // Keep GRP in automated -> test with static API
@@ -105,28 +114,26 @@ export function GuestForm(props) {
           <Text content="Enter external users' emails one by one, or separated by commas." />
           <FormField>
             <Flex fill={true} gap="gap.medium">
-              {error && (
-                <Input fluid error value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
-              )}
-              {!error && (
-                <Input fluid value={guestsInput} placeholder='Enter guests' onChange={handleInput}/>
-              )}
-              
+              <Flex.Item>
+                <Fragment>
+                {error && (
+                  <Input fluid error value={guestsInput} placeholder='Enter guests' onChange={handleGuestInput}/>
+                )}
+                {!error && (
+                  <Input fluid value={guestsInput} placeholder='Enter guests' onChange={handleGuestInput}/>
+                )}
+                </Fragment>
+              </Flex.Item>
+              <Flex.Item size="size.quarter">
+                <Button>Add Guests</Button>
+              </Flex.Item>
             </Flex>
-          </FormField>
-          <FormField>
-                <Flex fill={true} gap="gap.medium">
-
-                  <TextArea resize="both" fluid value={guestsMSG} placeholder='Enter a message to send to guests' onChange={handleInputMSG}/>
-                  
-                  <Button>Add Guests</Button>
-                </Flex>
           </FormField>
         </Form>
         {error && (
           <Text error content={error}/>
         )}
-
+        
         <PillGroup>
           {
             guests.map(guest =>
@@ -139,9 +146,20 @@ export function GuestForm(props) {
             )
           }
         </PillGroup>
-        <Flex hAlign="center">
+
+        <Flex column hAlign="center" gap="gap.medium">
           {guests.length > 0 && (
-            <Button primary content="Invite Users" onClick={triggerInvite}/>
+            <Fragment>
+              <Divider />
+              <TextArea 
+                resize="both" 
+                fluid 
+                value={inviteMessage} 
+                placeholder='Enter a message to send to guests' 
+                onChange={handleMessageInput}
+              />
+              <Button primary content="Invite Users" onClick={triggerInvite}/>
+            </Fragment>
           )}
         </Flex>
       </Flex>

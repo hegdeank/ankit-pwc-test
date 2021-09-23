@@ -1,12 +1,16 @@
 import * as React from "react";
 import { Fragment, useEffect, useState, useCallback } from "react";
-import { Button, Status, Table, Text, Header, Flex } from "@fluentui/react-northstar";
+import { 
+  Button, Status, Table, 
+  Header, Flex, Loader 
+} from "@fluentui/react-northstar";
 import { MoreIcon } from '@fluentui/react-icons-northstar'
-import { getUsers, getUser, getTeamMembers } from "../GraphService";
+import { getUser, getTeamMembers } from "../GraphService";
 
 
 export function GuestList(props) {
-  const [rows, setRows] = useState<any[]>([]); // String input
+  const [rows, setRows] = useState<any[]>([]);      // Rows of table
+  const [userIds, setUserIds] = useState<any>();  // User Ids of Team Members
   const token = props.token;
   const teamId = props.teamId;
 
@@ -57,83 +61,32 @@ export function GuestList(props) {
     },
   }
 
-  const getInvitedUsers = useCallback(async () => {
+  const getTeamGuests = useCallback(async () => {
     if (!token) { return; }
-    // let userList : any[] = [];
-
-    const teamResponsePayload = await getTeamMembers(token, teamId, "userId");
-
-    //console.log(teamResponsePayload);
-
-    // for (let member of teamResponsePayload.value) {
-    //   const userPayload = await getUser(
-    //     token, 
-    //     member.userId,
-    //     "companyName,createdDateTime,displayName,externalUserState,externalUserStateChangeDateTime,id,mail,userType"
-    //   )
-
-    //   userList.push(userPayload);
-      //.then(userPayload => {
-      //   console.log(userPayload);
-
-      //   const user = userPayload.value;
-
-      //   let statusIndicator;
-      //   if (user.externalUserState === null) {
-      //     statusIndicator = (<Status state="unknown" title="unknown" />);
-      //   } else if (user.externalUserState === "PendingAcceptance") {
-      //     statusIndicator = (<Status state="error" title="error" />);
-      //   } else if (user.externalUserState === "Accepted") {
-      //     statusIndicator = (<Status state="success" title="success" />);
-      //   }
-
-      //   userList.push({
-      //     key: user.id,
-      //     items: [
-      //       {
-      //         content: statusIndicator,
-      //         key: `status-${user.id}`
-      //       },
-      //       {
-      //         content: user.displayName,
-      //         key: `displayName-${user.id}`
-      //       },
-      //       {
-      //         content: user.mail,
-      //         key: `mail-${user.id}`
-      //       },
-      //       {
-      //         content: user.userType,
-      //         key: `userType-${user.id}`
-      //       },
-      //       {
-      //         content: user.externalUserState,
-      //         key: `externalUserState-${user.id}`
-      //       },
-      //       {
-      //         content: user.createdDateTime,
-      //         key: `createdDateTime-${user.id}`
-      //       },
-      //       {
-      //         content: user.externalUserStateChangeDateTime,
-      //         key: `externalUserStateChangeDateTime-${user.id}`
-      //       },
-      //       {
-      //         key: `more-${user.id}`,
-      //         ...moreOptionCell
-      //       }
-      //     ]
-      //   })
-      // });
-    // }
-
-    const responsePayload = await getUsers(
-      token,
-      "companyName,createdDateTime,displayName,externalUserState,externalUserStateChangeDateTime,id,mail,userType&$filter=userType eq 'guest'"
-    );
-    console.log(responsePayload);
-
+    const responsePayload = await getTeamMembers(token, teamId, "userId");
     const userResponse = responsePayload.value.map((user: any) => {
+      return user.userId;
+    });
+
+    setUserIds(userResponse);
+  }, [token]);
+
+  const getUsersById = useCallback(async () => {
+    if (!token) { return; }
+    let userRows: any[] = [];
+
+    for (let userId of userIds) {
+      const user = await getUser(
+        token, 
+        userId,
+        "companyName,createdDateTime,displayName,externalUserState,externalUserStateChangeDateTime,id,mail,userType"
+      );
+      
+      // We're fetching only Invited Guests
+      if (user.userType !== "Guest") {
+        continue;
+      }
+
       let statusIndicator;
       if (user.externalUserState === "PendingAcceptance") {
         statusIndicator = (<Status state="error" title="error" />);
@@ -142,15 +95,13 @@ export function GuestList(props) {
       } else {
         statusIndicator = (<Status state="unknown" title="unknown" />);
       }
-      let dte;
-      let date1;
-      let date2;
-      dte = user.createdDateTime.split("-");
-      date1 = dte[1]+"/"+dte[2].split("T")[0]+"/"+dte[0];
+
+      let dte = user.createdDateTime.split("-");
+      const date1 = dte[1]+"/"+dte[2].split("T")[0]+"/"+dte[0];
       dte = user.externalUserStateChangeDateTime.split("-");
-      date2 = dte[1]+"/"+dte[2].split("T")[0]+"/"+dte[0];
+      const date2 = dte[1]+"/"+dte[2].split("T")[0]+"/"+dte[0];
       
-      return {
+      userRows.push({
         key: user.id,
         items: [
           {
@@ -190,15 +141,18 @@ export function GuestList(props) {
             ...moreOptionCell
           }
         ]
-      }
-    });
+      });
+    }
+    setRows(userRows);
+  }, [userIds]);
 
-    setRows(userResponse);
+  useEffect(() => {
+    getTeamGuests();
   }, [token]);
 
   useEffect(() => {
-    getInvitedUsers();
-  }, [token]);
+    getUsersById();
+  }, [userIds]);
   
   return (
     <Fragment>
@@ -215,6 +169,9 @@ export function GuestList(props) {
             width: '100%'
           }}
         />
+        {rows.length === 0 && (
+          <Loader />
+        )}
       </Flex>
     </Fragment>
   );

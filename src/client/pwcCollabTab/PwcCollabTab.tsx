@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Provider, Flex, Text, Button, Header, List, Divider} from "@fluentui/react-northstar";
+import { Provider, Flex, Text, Header, Divider} from "@fluentui/react-northstar";
 import { Fragment, useState, useEffect, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
 import * as microsoftTeams from "@microsoft/teams-js";
@@ -23,9 +23,6 @@ export const PwcCollabTab = () => {
 
   const [ssoToken, setSsoToken] = useState<string>();
   const [msGraphOboToken, setMsGraphOboToken] = useState<string>();
-  const [recentMail, setRecentMail] = useState<any[]>();
-  const [users, setUsers] = useState<any[]>();
-
 
   /**
    * Initially checks to see if the app is running in an instance of Teams
@@ -39,7 +36,6 @@ export const PwcCollabTab = () => {
           const decoded: { [key: string]: any; } = jwtDecode(token) as { [key: string]: any; };
           setName(decoded!.name);
           setSsoToken(token);
-          console.log(context);
           microsoftTeams.appInitialization.notifySuccess();
         },
         failureCallback: (message: string) => {
@@ -114,7 +110,7 @@ export const PwcCollabTab = () => {
         }}>
         <NavMenu selected={selectedMenuItem} callback={handleMenuSelect} />
         {selectedMenuItem === "add" && (
-          <GuestForm token={msGraphOboToken} />
+          <GuestForm token={msGraphOboToken} teamId={teamId}/>
         )}
 
         {selectedMenuItem === "status" && (
@@ -128,3 +124,7 @@ export const PwcCollabTab = () => {
     </Provider>
   );
 };
+
+
+// Deny guests by default, allow by specified basis through domain
+// Deny by domain, create access packages through manage identities

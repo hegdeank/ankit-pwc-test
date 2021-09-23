@@ -51,7 +51,10 @@ export async function invite(token, invitation): Promise<any> {
 
   // Fetch response
   const response = await fetch(endpoint, requestObject);
-  return await response.json();
+  if (response.ok) {
+    return await response.json();
+  }
+  return;
 }
 
 export async function addTeamMember(token, teamId, userId): Promise<any> {
@@ -88,5 +91,8 @@ export async function getTeamMembers(token, teamId, select): Promise<any> {
 
   // Fetch response
   const response = await fetch(endpoint, requestObject);
-  return await response.json();
+  if (response.ok) {
+    return await response.json();
+  }
+  return;
 }
