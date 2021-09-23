@@ -4,6 +4,7 @@ import { Button, Status, Table, Text, Header, Flex } from "@fluentui/react-north
 import { MoreIcon } from '@fluentui/react-icons-northstar'
 import { getUsers, getUser, getTeamMembers } from "../GraphService";
 
+
 export function GuestList(props) {
   const [rows, setRows] = useState<any[]>([]); // String input
   const token = props.token;
@@ -141,6 +142,13 @@ export function GuestList(props) {
       } else {
         statusIndicator = (<Status state="unknown" title="unknown" />);
       }
+      let dte;
+      let date1;
+      let date2;
+      dte = user.createdDateTime.split("-");
+      date1 = dte[1]+"/"+dte[2].split("T")[0]+"/"+dte[0];
+      dte = user.externalUserStateChangeDateTime.split("-");
+      date2 = dte[1]+"/"+dte[2].split("T")[0]+"/"+dte[0];
       
       return {
         key: user.id,
@@ -168,12 +176,12 @@ export function GuestList(props) {
             key: `externalUserState-${user.id}`
           },
           {
-            content: user.createdDateTime,
+            content: date1,
             truncateContent: true,
             key: `createdDateTime-${user.id}`
           },
           {
-            content: user.externalUserStateChangeDateTime,
+            content: date2,
             truncateContent: true,
             key: `externalUserStateChangeDateTime-${user.id}`
           },
