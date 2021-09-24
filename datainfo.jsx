@@ -5,21 +5,24 @@
 var mysql      = require("mysql")
 var connection = mysql.createConnection({
   //connection info for Phpmyadmin
-  /*
+  
   host:'mysql-user.cse.msu.edu',
   user     : 'shuxinyu@web3.cse.msu.edu',
   password : 'MSU@2021',
   database:"shuxinyu"
-  */
+  /*
+  connecting local mysql database
   host:"localhost",
   user:"root",
   password:"12345678",
   database:"pwc"
+  */
 });
  
 connection.connect();
  
-connection.query('SELECT * FROM manager', function (error, results, fields) {
+//connection.query('SELECT * FROM manager', function (error, results, fields) { --> local mysql database
+connection.query('SELECT * FROM pwc', function (error, results, fields) {
   if (error) throw error;
   var ret =JSON.stringify(results);
   var json = JSON.parse(ret);
