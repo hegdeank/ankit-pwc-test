@@ -1,0 +1,20 @@
+{
+    "1":{
+        "lastname":"Trump",
+        "firstname":"Jack",
+        "company":"Coke",
+        "email":"jack@coke.com"
+    },
+    "2":{
+        "lastname":"Smith",
+        "firstname":"Marry",
+        "company":"Apple",
+        "email":"marry@apple.com"
+    },
+    "3":{
+        "lastname":"Strand",
+        "firstname":"Joe",
+        "company":"MSU",
+        "email":"strand@msu.com"
+    }
+}
