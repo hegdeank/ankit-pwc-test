@@ -12,6 +12,7 @@ export function GuestForm(props) {
   const [guests, setGuests] = useState<string[]>([]);     // Array of Guests
   const [error, setError] = useState<string>("");
   const [invitedPayloads, setInvitedPayloads] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const token = props.token;
   const teamId = props.teamId;
   
@@ -45,6 +46,7 @@ export function GuestForm(props) {
       setError("");
     }
 
+    setLoading(false);
     setGuests([...guests, ...addGuest]);
     setGuestsInput(rejectGuest.slice(0, -2));
   }
@@ -61,6 +63,8 @@ export function GuestForm(props) {
   // Link: https://docs.microsoft.com/en-us/graph/api/resources/invitedusermessageinfo?view=graph-rest-1.0#json-representation
   const triggerInvite = async () => {
     if (!token) { return; }
+
+    setLoading(true);
 
     for (let guest of guests) {
       const invitation = {
@@ -158,7 +162,7 @@ export function GuestForm(props) {
                 placeholder='Enter a message to send to guests' 
                 onChange={handleMessageInput}
               />
-              <Button primary content="Invite Users" onClick={triggerInvite}/>
+              <Button primary loading={loading} content={loading ? "Inviting" : "Invite Users"} onClick={triggerInvite}/>
             </Fragment>
           )}
         </Flex>

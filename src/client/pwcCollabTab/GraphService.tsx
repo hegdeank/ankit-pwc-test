@@ -38,6 +38,20 @@ export async function getUser(token, userId, select) {
   return;
 }
 
+export async function deleteUser(token, userId) {
+    const endpoint = `${baseUrl}users/${userId}`;
+    const requestObject = {
+        method: "DELETE",
+        headers: {
+        authorization: `bearer ${token}`,
+        "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+}
+
 export async function invite(token, invitation): Promise<any> {
   const endpoint = `${baseUrl}invitations`;
   const requestObject = {
@@ -78,7 +92,7 @@ export async function addTeamMember(token, teamId, userId): Promise<any> {
   return await response.json();
 }
 
-export async function getTeamMembers(token, teamId, select): Promise<any> {
+export async function getTeamMembers(token, teamId): Promise<any> {
   const endpoint = `${baseUrl}teams/${teamId}/members`;
 
   const requestObject = {
@@ -95,4 +109,18 @@ export async function getTeamMembers(token, teamId, select): Promise<any> {
     return await response.json();
   }
   return;
+}
+
+export async function removeTeamMember(token, teamId, memberId): Promise<any> {
+    const endpoint = `${baseUrl}teams/${teamId}/members/${memberId}`;
+
+    const requestObject = {
+        method: "DELETE",
+        headers: {
+            authorization: `bearer ${token}`
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
 }
