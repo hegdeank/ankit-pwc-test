@@ -1,23 +1,20 @@
 {
-    "1":{
+    "coke.com":{
         "lastname":"Trump",
         "firstname":"Jack",
         "company": "Coke",
-        "domain":"coke.com",
         "email":"jack@coke.com"
     },
-    "2":{
+    "apple.com":{
         "lastname":"Smith",
         "firstname":"Marry",
         "company":"Apple",
-        "domain":"apple.com",
         "email":"marry@apple.com"
     },
-    "3":{
+    "msu.edu":{
         "lastname":"Strand",
         "firstname":"Joe",
         "company":"MSU",
-        "domain": "msu.edu",
-        "email":"strand@msu.com"
+        "email":"strand@msu.edu"
     }
 }

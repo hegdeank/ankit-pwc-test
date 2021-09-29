@@ -13,7 +13,7 @@ export function GetManager(){
         var allinfo =Array();
         var info_email = data[i]["email"];
         var info_name =data[i]["firstname"]+","+data[i]["lastname"];
-        var domain = data[i]["domain"];
+        var domain = i;
         allinfo.push(info_name);
         allinfo.push(info_email);
         console.log(allinfo);   //test
@@ -29,7 +29,7 @@ export function GetManager(){
         </div>
       );
     
-     //return ret;   --->return the map
+    return ret;   // --->return the map
     
 }
 

@@ -1,5 +1,3 @@
-// import { User } from 'microsoft-graph';
-
 const baseUrl = "https://graph.microsoft.com/v1.0/";
 
 export async function getUsers(token, select) {
