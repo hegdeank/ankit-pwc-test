@@ -22,5 +22,11 @@
         "firstname":"Zach",
         "company":"TEST",
         "email":"PwCTeamsBot@pwcteamsbot.onmicrosoft.com"
+    },
+    "seansworld.com": {
+        "lastname": "Nguyen",
+        "firstname": "Sean",
+        "company": "Sean's World",
+        "email": "nguye610@msu.edu" 
     }
 }
