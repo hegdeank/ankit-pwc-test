@@ -16,5 +16,11 @@
         "firstname":"Joe",
         "company":"MSU",
         "email":"strand@msu.edu"
+    },
+    "decorbuz.com":{
+        "lastname":"Fincher",
+        "firstname":"Zach",
+        "company":"TEST",
+        "email":"PwCTeamsBot@pwcteamsbot.onmicrosoft.com"
     }
 }

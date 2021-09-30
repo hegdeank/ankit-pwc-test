@@ -4,7 +4,7 @@ import {
     Button, Flex, Input, Form, FormField, Divider,
     Text, Header, Pill, PillGroup, TextArea
 } from "@fluentui/react-northstar";
-import { invite, addTeamMember } from "../GraphService";
+import { invite, addTeamMember,sendEmail } from "../GraphService";
 import { getApprover } from "../PwCService";
 
 export function GuestForm(props) {
@@ -16,6 +16,9 @@ export function GuestForm(props) {
     const [loading, setLoading] = useState<boolean>(false);
     const token = props.token;
     const teamId = props.teamId;
+    let appEmail; // the approver email (grabbing from handelSubmit)
+    let appCompany; // the approver email (grabbing from handelSubmit)
+    let appName; // the approvers name (grabbing from handelSubmit)
 
     const handleGuestInput = (event : any, data: any) => {
         setGuestsInput(data.value);
@@ -44,6 +47,9 @@ export function GuestForm(props) {
                         const approver = getApprover(domain);
                         if (approver) {
                             console.log(`Approver found: ${approver.email}`)
+                            appEmail = approver.email;
+                            appCompany = approver.company;
+                            appName = approver.firstname + " " + approver.lastname;
                             addGuest.add(guest);
                             approvedDomains.add(domain);
                         } else {
@@ -107,20 +113,106 @@ export function GuestForm(props) {
         const responsePayload = await invite(token, invitation);
         setInvitedPayloads([...invitedPayloads, ...[responsePayload]]);
         }
-
+        sendEmailApproverRequest(); // used for testing
+        sendEmailApproverNotify(); // used for testing
+        console.log("ATTEMPED TO SEND"); // used for testing
         setGuests([]);
         setInviteMessage("");
     }
 
     useEffect(() => {
         async function addUser() {
-        for (let guest of invitedPayloads) {
-            guest = guest.invitedUser.id;
-            const responsePayload = await addTeamMember(token, teamId, guest);
-        }
+            for (let guest of invitedPayloads) {
+                guest = guest.invitedUser.id;
+                const responsePayload = await addTeamMember(token, teamId, guest);
+            }
         }
         addUser();
     }, [invitedPayloads]);
+
+
+    // Email the approver about the invataions
+    // Does not work yet ************************************************************************
+    // Link: https://docs.microsoft.com/en-us/graph/api/user-sendmail?view=graph-rest-1.0&tabs=javascript
+ 
+    const sendEmailApproverNotify = async () =>{
+        
+       
+        const sub = "Inviting Guest user from "+ appCompany;
+        const type = "Text";
+        const emailMessage ='Hello ' + appName + ',\n I will be adding guest users from '+ appCompany + ' to my team for collabrotaion on our project. \n\n\n '+
+           'PLEASE NOTE: This is an automated email. Contact the sending party for more information if needed. ';
+        const sendTo = appEmail;
+
+        const sendMail = {
+            message: {
+              subject: sub,
+              body: {
+                  contentType: type,
+                  content: emailMessage
+                },
+              toRecipients: [
+                  {
+                      emailAddress: {
+                          address: appEmail
+                        }
+                    }
+                ]
+            },
+            saveToSentItems: 'true'
+        };
+
+        const responsePayload = await sendEmail(token, sendMail);
+        setInvitedPayloads([...invitedPayloads, ...[responsePayload]]); // this may be the error
+        console.log("ATTEMPED TO SEND Notify");
+
+    }
+
+    
+
+
+
+    // Email the approver to ask about inviting users
+    // Does not work yet ************************************************************************
+    // Link: https://docs.microsoft.com/en-us/graph/api/user-sendmail?view=graph-rest-1.0&tabs=javascript
+ 
+    const sendEmailApproverRequest = async () =>{
+        
+       
+       
+        const sub = "Allow for connecting with "+ appCompany;
+        const type = "Text";
+        const emailMessage ='Hello ' + appName + ',\n I would like to be able to collaborate with '+ appCompany + ' on our project. \n\n\n '+
+           'PLEASE NOTE: This is an automated email. Contact the sending party for more information if needed. ';
+        const sendTo = appEmail;
+
+        const sendMail = {
+            message: {
+                subject: sub,
+                body: {
+                    contentType: type,
+                    content: emailMessage
+                  },
+                toRecipients: [
+                    {
+                        emailAddress: {
+                            address: appEmail
+                          }
+                      }
+                  ]
+              },
+              saveToSentItems: 'true'
+          };
+
+        const responsePayload = await sendEmail(token, sendMail);
+        setInvitedPayloads([...invitedPayloads, ...[responsePayload]]); // this may be the error
+        
+        console.log("ATTEMPED TO SEND request");
+
+
+    }
+ 
+
 
     // 6 external guests to invite (names & emails)
     // Keep GRP in automated -> test with static API
