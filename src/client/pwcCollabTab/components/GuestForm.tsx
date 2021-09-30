@@ -125,6 +125,8 @@ export function GuestForm(props) {
 
         // sendEmailApproverRequest(); // used for testing
         // sendEmailApproverNotify(); // used for testing
+        setApproversNotify([]);
+        setApproversRequest([]);
         setGuests([]);
         setInviteMessage("");
     }
@@ -151,7 +153,7 @@ export function GuestForm(props) {
                     content: `Hello ${approver.name},\n
 I will be adding guest users from ${approver.company} to my team for collaboration on our project.\n\n\n
 PLEASE NOTE: This is an automated email. Contact the sending party for more information if needed.
-                    `
+`
                 },
                 toRecipients: [
                     {
