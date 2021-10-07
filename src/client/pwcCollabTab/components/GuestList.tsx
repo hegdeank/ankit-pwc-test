@@ -6,69 +6,55 @@ import {
     Header, Flex, Loader
 } from "@fluentui/react-northstar";
 import { MoreIcon } from "@fluentui/react-icons-northstar";
-import { 
-    getUser, getTeamMembers, 
-    deleteUser, removeTeamMember 
-} from "../GraphService";
-
+import {
+    getUser, getTeamMembers,
+    deleteUser, removeTeamMember
+} from "../services/GraphService";
 
 export function GuestList(props) {
     const [{ theme, context }] = useTeams();
-    // const [teamId, setTeamId] = useState<string | undefined>();
-    const [rows, setRows] = useState<any[]>([]);      // Rows of table
-    const [userIds, setUserIds] = useState<any[]>([]);  // User Ids of Team Members
+    const [rows, setRows] = useState<any[]>([]);
+    const [userIds, setUserIds] = useState<any[]>([]);
     const token = props.token;
     const teamId = props.teamId;
 
     const header = {
-        key: 'header',
+        key: "header",
         items: [
             {
-                key: 'statusColor',
-                'aria-label': 'status color',
+                key: "statusColor",
+                "aria-label": "status color"
             },
             {
-                content: 'Name',
-                key: 'name',
+                content: "Name",
+                key: "name"
             },
             {
-                content: 'E-Mail',
-                key: 'mail',
+                content: "E-Mail",
+                key: "mail"
             },
             {
-                content: 'User Type',
-                key: 'type',
+                content: "User Type",
+                key: "type"
             },
             {
-                content: 'Status',
-                key: 'status',
+                content: "Status",
+                key: "status"
             },
             {
-                content: 'Created Date',
-                key: 'created',
+                content: "Created Date",
+                key: "created"
             },
             {
-                content: 'Updated Date',
-                key: 'updated',
+                content: "Updated Date",
+                key: "updated"
             },
             {
-                key: 'more options',
-                'aria-label': 'options',
-            },
-        ],
-    }
-
-    const handleTeamMemberRemove = async (memberId : string) => {
-        await removeTeamMember(token, teamId, memberId);
-        setRows([]);
-        getTeamGuests();
-    }
-
-    const handleDeleteUser = async (userId : string) => {
-        await deleteUser(token, userId);
-        setRows([]);
-        getTeamGuests();
-    }
+                key: "more options",
+                "aria-label": "options"
+            }
+        ]
+    };
 
     const getTeamGuests = useCallback(async () => {
         if (!token) { return; }
@@ -83,17 +69,29 @@ export function GuestList(props) {
         setUserIds(userResponse);
     }, [token]);
 
+    const handleTeamMemberRemove = async (memberId : string) => {
+        await removeTeamMember(token, teamId, memberId);
+        setRows([]);
+        getTeamGuests();
+    };
+
+    const handleDeleteUser = async (userId : string) => {
+        await deleteUser(token, userId);
+        setRows([]);
+        getTeamGuests();
+    };
+
     const getUsersById = useCallback(async () => {
         if (!token) { return; }
-        let userRows: any[] = [];
+        const userRows: any[] = [];
 
-        for (let userId of userIds) {
+        for (const userId of userIds) {
             const user = await getUser(
-                token, 
+                token,
                 userId.userId,
                 "companyName,createdDateTime,displayName,externalUserState,externalUserStateChangeDateTime,id,mail,userType"
             );
-            
+
             // We're fetching only Invited Guests
             if (user.userType !== "Guest") {
                 continue;
@@ -112,7 +110,7 @@ export function GuestList(props) {
             const date1 = `${dte[1]}/${dte[2].split("T")[0]}/${dte[0]}`;
             dte = user.externalUserStateChangeDateTime.split("-");
             const date2 = `${dte[1]}/${dte[2].split("T")[0]}/${dte[0]}`;
-            
+
             userRows.push({
                 key: user.id,
                 items: [
@@ -156,8 +154,8 @@ export function GuestList(props) {
                             content={
                                 <Flex gap="gap.medium" hAlign="center" space="around">
                                     <Button content="Remove from Team" onClick={() => handleTeamMemberRemove(userId.id)}/>
-                                    <Button 
-                                        content="Remove from Team and Organization" 
+                                    <Button
+                                        content="Remove from Team and Organization"
                                         onClick={() => handleDeleteUser(user.id)}
                                         style={{
                                             backgroundColor: theme.siteVariables.colors.red[300]
@@ -168,7 +166,7 @@ export function GuestList(props) {
                             header="Remove Member"
                             trigger={<Button tabIndex={-1} icon={<MoreIcon />} circular text iconOnly title="More options" />}
                         />,
-                        truncateContent: true,
+                        truncateContent: true
                     }
                 ]
             });
@@ -183,24 +181,24 @@ export function GuestList(props) {
     useEffect(() => {
         getUsersById();
     }, [userIds]);
-    
+
     return (
         <Fragment>
             <Flex column fill={true}>
                 <Header as="h2" content="Invited external users" />
-                <Button content="Test Refresh" onClick={()=> {
+                <Button content="Test Refresh" onClick={() => {
                     setRows([]);
                     getTeamGuests();
                 }
                 } />
-                <Table 
-                    variables={{ 
+                <Table
+                    variables={{
                         cellContentOverflow: "none"
                     }}
                     header={header}
                     rows={rows}
                     styles={{
-                        width: '100%'
+                        width: "100%"
                     }}
                 />
                 {rows.length === 0 && (

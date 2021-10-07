@@ -5,6 +5,7 @@ import * as morgan from "morgan";
 import { MsTeamsApiRouter, MsTeamsPageRouter } from "express-msteams-host";
 import * as debug from "debug";
 import * as compression from "compression";
+import { getApproverByDomain, getApprovers, addApprover } from "./PwCController";
 
 import jwtDecode from "jwt-decode";
 import Axios, { AxiosResponse } from "axios";
@@ -21,9 +22,22 @@ require("dotenv").config();
 // eslint-disable-next-line import/first
 import * as allComponents from "./TeamsAppsComponents";
 
+const bodyParser = require("body-parser");
+
 // Create the Express webserver
 const express = Express();
 const port = process.env.port || process.env.PORT || 3007;
+
+express.use(bodyParser.json());
+express.use(bodyParser.urlencoded({
+    extended: true
+}));
+
+express.get("/getApprover", getApprovers);
+
+express.get("/getApprover/:domain", getApproverByDomain);
+
+express.post("/addApprover", addApprover);
 
 // Inject the raw request body onto the request object
 express.use(Express.json({
@@ -66,57 +80,57 @@ express.use("/", Express.static(path.join(__dirname, "web/"), {
 express.set("port", port);
 
 express.get("/exchangeSsoTokenForOboToken", async (req, res) => {
-  log("getting access token for Microsoft Graph...");
+    log("getting access token for Microsoft Graph...");
 
-  const clientId = process.env.TAB_APP_ID as string;
-  const clientSecret = process.env.SSOTAB_APP_SECRET as string;
-  const ssoToken = req.query.ssoToken as string;
+    const clientId = process.env.TAB_APP_ID as string;
+    const clientSecret = process.env.SSOTAB_APP_SECRET as string;
+    const ssoToken = req.query.ssoToken as string;
 
-  // build Azure AD OAuth2 token endpoint
-  const aadTokenEndpoint = `https://login.microsoftonline.com/${jwtDecode<any>(ssoToken).tid}/oauth2/v2.0/token`;
+    // build Azure AD OAuth2 token endpoint
+    const aadTokenEndpoint = `https://login.microsoftonline.com/${jwtDecode<any>(ssoToken).tid}/oauth2/v2.0/token`;
 
-  // build body of request to obtain an access token using the OAuth2 OBO flow
-  const oAuthOBOParams = {
-    grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-    client_id: clientId,
-    client_secret: clientSecret,
-    assertion: ssoToken,
-    requested_token_use: "on_behalf_of",
-    scope: process.env.SSOTAB_APP_SCOPES
-  };
+    // build body of request to obtain an access token using the OAuth2 OBO flow
+    const oAuthOBOParams = {
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        client_id: clientId,
+        client_secret: clientSecret,
+        assertion: ssoToken,
+        requested_token_use: "on_behalf_of",
+        scope: process.env.SSOTAB_APP_SCOPES
+    };
 
-  // convert params to URL encoded form body payload
-  const oAuthOboRequest = Object.keys(oAuthOBOParams)
-    .map((key, index) => `${key}=${encodeURIComponent(oAuthOBOParams[key])}`)
-    .join("&");
+    // convert params to URL encoded form body payload
+    const oAuthOboRequest = Object.keys(oAuthOBOParams)
+        .map((key, index) => `${key}=${encodeURIComponent(oAuthOBOParams[key])}`)
+        .join("&");
 
-  const HEADERS = {
-    accept: "application/json",
-    "content-type": "application/x-www-form-urlencoded"
-  };
+    const HEADERS = {
+        accept: "application/json",
+        "content-type": "application/x-www-form-urlencoded"
+    };
 
-  try {
-    // submit request
-    const response = await Axios.post(aadTokenEndpoint, oAuthOboRequest, { headers: HEADERS });
+    try {
+        // submit request
+        const response = await Axios.post(aadTokenEndpoint, oAuthOboRequest, { headers: HEADERS });
 
-    // check response
-    if (response.status === 200) {
-      // on successful response, return full object to client
-      res.status(200).send(response.data);
-    } else {
-      // else on non-success...
-      if ((response.data.error === "invalid_grant") || (response.data.error === "interaction_required")) {
-        // if consent required... reply with 403: Forbidden
-        res.status(403).json({ error: "consent_required" });
-      } else {
-        // else, some other error occurred... fail
-        res.status(500).json({ error: "Could not exchange access token" });
-      }
+        // check response
+        if (response.status === 200) {
+            // on successful response, return full object to client
+            res.status(200).send(response.data);
+        } else {
+            // else on non-success...
+            if ((response.data.error === "invalid_grant") || (response.data.error === "interaction_required")) {
+                // if consent required... reply with 403: Forbidden
+                res.status(403).json({ error: "consent_required" });
+            } else {
+                // else, some other error occurred... fail
+                res.status(500).json({ error: "Could not exchange access token" });
+            }
+        }
+    } catch (error) {
+        // for all others, fail
+        res.status(400).json({ error: `Unknown error: ${error}` });
     }
-  } catch (error) {
-    // for all others, fail
-    res.status(400).json({ error: `Unknown error: ${error}` });
-  }
 });
 
 // Start the webserver

@@ -4,8 +4,8 @@ import {
     Button, Flex, Input, Form, FormField, Divider,
     Text, Header, Pill, PillGroup, TextArea
 } from "@fluentui/react-northstar";
-import { invite, addTeamMember, sendEmail } from "../GraphService";
-import { getApprover } from "../PwCService";
+import { invite, addTeamMember, sendEmail } from "../services/GraphService";
+// import { getApprover } from "../PwCService";
 
 export function GuestForm(props) {
     const [guestsInput, setGuestsInput] = useState<string>("");
@@ -43,27 +43,28 @@ export function GuestForm(props) {
             if (re.test(guest)) {
                 let domain = guest.split("@").pop();
                 if (domain) {
-                    if (!approvedDomains.has(domain)) {
-                        const approver = getApprover(domain);
-                        if (approver) {
-                            console.log(`Approver found: ${approver.email}`);
+                    addGuest.add(guest);
+                    // if (!approvedDomains.has(domain)) {
+                    //     const approver = getApprover(domain);
+                    //     if (approver) {
+                    //         console.log(`Approver found: ${approver.email}`);
 
-                            addGuest.add(guest);
-                            approvedDomains.add(domain);
-                            approversValid.add({
-                                email: approver.email,
-                                company: approver.company,
-                                name: `${approver.firstname} ${approver.lastname}`
-                            });
-                        } else {
-                            console.log(`Approver not found for domain: ${domain}`);
-                            rejectGuest += `${guest}, `;
-                            unapprovedDomains.add(domain);
-                        }
-                    } else {
-                        console.log(`Approver found for domain: ${domain}`)
-                        addGuest.add(guest);
-                    }
+                    //         addGuest.add(guest);
+                    //         approvedDomains.add(domain);
+                    //         approversValid.add({
+                    //             email: approver.email,
+                    //             company: approver.company,
+                    //             name: `${approver.firstname} ${approver.lastname}`
+                    //         });
+                    //     } else {
+                    //         console.log(`Approver not found for domain: ${domain}`);
+                    //         rejectGuest += `${guest}, `;
+                    //         unapprovedDomains.add(domain);
+                    //     }
+                    // } else {
+                    //     console.log(`Approver found for domain: ${domain}`)
+                    //     addGuest.add(guest);
+                    // }
                 }
             } else {
                 rejectGuest += `${guest}, `;

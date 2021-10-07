@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Provider, Flex, Text, Header, Divider} from "@fluentui/react-northstar";
+import { Provider, Flex, Text, Header, Divider, Button} from "@fluentui/react-northstar";
 import { Fragment, useState, useEffect, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
 import * as microsoftTeams from "@microsoft/teams-js";
@@ -8,7 +8,10 @@ import jwtDecode from "jwt-decode";
 import { NavMenu } from "./components/NavMenu";
 import { GuestForm } from "./components/GuestForm";
 import { GuestList } from "./components/GuestList";
+import { DatabaseTest } from "./components/DatabaseTest";
+import { getApprovers, getApproverByDomain } from "./services/PwCService";
 
+// var mysql = require("mysql");
 
 /**
  * The Main Tab View
@@ -103,22 +106,25 @@ export const PwcCollabTab = () => {
             {error && <div><Text content={`An SSO error occurred ${error}`} /></div>}
         </Flex>
         <Divider />
-
         <Flex gap="gap.large" padding="padding.medium"
             styles={{
             padding: '1rem 4rem 4rem 1rem'
             }}>
             <NavMenu selected={selectedMenuItem} callback={handleMenuSelect} />
             {selectedMenuItem === "add" && (
-            <GuestForm token={msGraphOboToken} teamId={teamId}/>
+                <GuestForm token={msGraphOboToken} teamId={teamId}/>
             )}
 
             {selectedMenuItem === "status" && (
-            <GuestList token={msGraphOboToken} teamId={teamId} />
+                <GuestList token={msGraphOboToken} teamId={teamId} />
             )}
 
             {selectedMenuItem === "faq" && (
-            <Fragment>Add Documentation here</Fragment>
+                <Fragment>Add Documentation here</Fragment>
+            )}
+
+            {selectedMenuItem === "dbtest" && (
+                <DatabaseTest />
             )}
         </Flex>
         </Provider>
