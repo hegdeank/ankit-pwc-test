@@ -28,9 +28,13 @@ Install Microsoft Graph API clients with these commands:
 ```bash
 npm install @microsoft/microsoft-graph-client
 npm install @types/microsoft-graph --save-dev
-npm install mysql
+
 ```
 
+Install database dependecys using 
+```bash
+npm install mysql
+```
 ## Running the app locally
 
 Run `gulp ngrok-serve` in the main directory of the project.
