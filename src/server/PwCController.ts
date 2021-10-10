@@ -61,3 +61,118 @@ export const addApprover = async (req, res) => {
         }
     );
 };
+
+
+//Building additional functions needed
+
+// We must assume
+
+// Use this to get a user by an email for when starting a request
+
+//1. First using Azure if they are apart of the org with an email domain of : @pwcteamsbot.onmicrosoft.com, if so proceed otherwise fail
+//2. Now check if the emails they enter are emails we have stored: Use getApproverByDomain, if so proceed otherwise fail
+//3. Also if the emails have an approver, check if the user has access to the approver by their email. Before - store the id of approver in var, then use below to check if permission contains the number.(Split multi on , )
+// continue below
+
+export const getUserByEmail = async (req, res) => {
+    log(req.params.domain);
+    conn.query(
+        "SELECT * FROM table_approver WHERE email=?",
+        [req.params.email],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            log(ret);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};
+
+//3. If they do not have access - display message alerting them a request was made. Use statement below to create request(sendEmailApproverRequest). Clear all data********* (Use below) Alert approver of request
+//3. Note that for approval_status
+    //0 = deny
+    //1 = pending
+    //2 = accepted
+
+export const addApproval = async (req, res) => {
+    log(req.body);
+    conn.query(
+        "INSERT INTO table_approvals (approver_id, user_id, teams_channel, approval_status) VALUES (?,?,?,?)",
+        [req.body.app_id, req.body.use_id, req.body.channel,1],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            log(ret);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};
+
+
+
+// update an approval 2 steps - update the table_approvals and update the table_users 
+
+//update the approval (Accept)
+//"UPDATE table_approvals SET approval_status = 2 WHERE approver_id = ? AND user_id = ?;"
+
+//update the user - need to first get the permissions then add them
+//"UPDATE table_users SET permissions = ? WHERE lastname = ? AND email = ?;"
+
+//3. If they do have access only alert approver of adding (sendEmailApproverNotify)
+
+
+
+//Creating SQL statement for joining 3 tables and getting the specific users approvals - this is for the approver
+//Select table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status 
+//FROM dbpwc.table_approvals 
+//INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id
+//INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id
+//WHERE table_approver.email = ?;
+
+
+export const getApproverApprovals = async (req, res) => {
+    log(req.params.domain);
+    conn.query(
+        "SELECT table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id WHERE table_approver.email = ?;",
+        [req.params.email],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            log(ret);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};
+
+
+// THis is for getting all the approval requests for a specific user that is waiting on an approver --- for a user
+
+//Select table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status 
+//FROM dbpwc.table_approvals 
+//INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id
+//INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id
+//WHERE table_users.email = ?;
+
+//Process to show data
+
+export const getUserApprovals = async (req, res) => {
+    log(req.params.domain);
+    conn.query(
+        "SELECT table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id WHERE table_users.email = ?;",
+        [req.params.email],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            log(ret);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};

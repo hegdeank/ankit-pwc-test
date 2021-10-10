@@ -5,7 +5,7 @@ import * as morgan from "morgan";
 import { MsTeamsApiRouter, MsTeamsPageRouter } from "express-msteams-host";
 import * as debug from "debug";
 import * as compression from "compression";
-import { getApproverByDomain, getApprovers, addApprover } from "./PwCController";
+import { getApproverByDomain, getApprovers, addApprover,  getUserByEmail, addApproval, getApproverApprovals ,getUserApprovals } from "./PwCController";
 
 import jwtDecode from "jwt-decode";
 import Axios, { AxiosResponse } from "axios";
@@ -38,6 +38,14 @@ express.get("/getApprover", getApprovers);
 express.get("/getApprover/:domain", getApproverByDomain);
 
 express.post("/addApprover", addApprover);
+
+express.get("/getUserByEmail/:email", getUserByEmail);
+
+express.post("/addApproval", addApproval);
+
+express.get("/getApproverApprovals/:email", getApproverApprovals);
+
+express.get("/getUserApprovals/:email", getUserApprovals);
 
 // Inject the raw request body onto the request object
 express.use(Express.json({
