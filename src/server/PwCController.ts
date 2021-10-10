@@ -176,3 +176,39 @@ export const getUserApprovals = async (req, res) => {
         }
     );
 };
+//?????Need to fix
+// export const getUserID = async (req, res) => {
+//     log(req.params.email);
+//     conn.query(
+//         "SELECT * FROM table_users WHERE email=?",
+//         [req.params.email],
+//         function (err, results) {
+//             if (err) throw err;
+//             const ret = JSON.stringify(results);
+//             const json = JSON.parse(ret);
+//             log(ret);
+//             res.setHeader("Content-Type", "application/json");
+//             res.status(200).send({ data: json });
+//         }
+//     );
+// };
+//???? Need to fix
+// export const updateApprovalStatus = async (req, res) => {
+//     var user_id=getUserID(req,res);   //get userid from table_users table
+//     var status = 1;
+//     if (req.param.status=="no"){    //approval_status=1 or 0
+//         status=0;
+//     }
+//     conn.query(
+//         "UPDATE table_approvals SET approval_status=? where user_id=?",
+//         [status,user_id],
+//         function (err, results) {
+//             if (err) throw err;
+//             const ret = JSON.stringify(results);
+//             const json = JSON.parse(ret);
+//             log(ret);
+//             res.setHeader("Content-Type", "application/json");
+//             res.status(200).send({ data: json });
+//         }
+//     );
+// };
