@@ -176,39 +176,47 @@ export const getUserApprovals = async (req, res) => {
         }
     );
 };
-//?????Need to fix
-// export const getUserID = async (req, res) => {
-//     log(req.params.email);
-//     conn.query(
-//         "SELECT * FROM table_users WHERE email=?",
-//         [req.params.email],
-//         function (err, results) {
-//             if (err) throw err;
-//             const ret = JSON.stringify(results);
-//             const json = JSON.parse(ret);
-//             log(ret);
-//             res.setHeader("Content-Type", "application/json");
-//             res.status(200).send({ data: json });
-//         }
-//     );
-// };
-//???? Need to fix
-// export const updateApprovalStatus = async (req, res) => {
-//     var user_id=getUserID(req,res);   //get userid from table_users table
-//     var status = 1;
-//     if (req.param.status=="no"){    //approval_status=1 or 0
-//         status=0;
-//     }
-//     conn.query(
-//         "UPDATE table_approvals SET approval_status=? where user_id=?",
-//         [status,user_id],
-//         function (err, results) {
-//             if (err) throw err;
-//             const ret = JSON.stringify(results);
-//             const json = JSON.parse(ret);
-//             log(ret);
-//             res.setHeader("Content-Type", "application/json");
-//             res.status(200).send({ data: json });
-//         }
-//     );
-// };
+
+//Get the UserID by email for updating the approval_status
+export const getUserID = async (req, res) => {
+    log(req.params.email);
+    conn.query(
+        "SELECT * FROM table_users WHERE email=?",
+        [req.params.email],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            log(ret);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};
+
+//May not be req.param.status, or the response message may not be just "yes" or "no".
+//Right now just assume is "yes" or "no"
+//Update the approval_status by userId
+// 0->deny; 1->pending; 2->yes;
+export const updateApprovalStatus = async (req, res) => {
+    var user_id=getUserID(req,res);   //get userid from table_users table
+    var status = 1;                   //approval_status=1 -->pending/default
+    if (req.param.status=="no"){    //approval_status=0 --> deny
+        status=0;
+    }
+    if (req.param.status=="yes"){   //approval_status=2 -->approved
+         status=2;
+     }
+    conn.query(
+        "UPDATE table_approvals SET approval_status=? where user_id=?",
+        [status,user_id],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            log(ret);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};
