@@ -46,3 +46,68 @@ export async function addApprover(approver) {
         return await response.json();
     }
 }
+
+export async function getUserByEmail(email) {
+    let endpoint = `/getUserByEmail/${email}`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
+
+export async function addApproval(approval) {
+    let endpoint = "/addApprover";
+    const requestObject = {
+        method: "POST",
+        headers: {
+            "content-type": "application/json"
+        },
+        body: JSON.stringify(approval)
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
+
+export async function getApproverApprovals(email) {
+    let endpoint = `/getApproverApprovals/${email}`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
+
+export async function getUserApprovals(email) {
+    let endpoint = `/getUserApprovals/${email}`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
