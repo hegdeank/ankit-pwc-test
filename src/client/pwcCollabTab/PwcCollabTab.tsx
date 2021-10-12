@@ -6,12 +6,11 @@ import * as microsoftTeams from "@microsoft/teams-js";
 import jwtDecode from "jwt-decode";
 
 import { NavMenu } from "./components/NavMenu";
+import { MembersView } from "./components/MembersView";
 import { GuestForm } from "./components/GuestForm";
 import { GuestList } from "./components/GuestList";
 import { DatabaseTest } from "./components/DatabaseTest";
 import { getApprovers, getApproverByDomain } from "./services/PwCService";
-
-// var mysql = require("mysql");
 
 /**
  * The Main Tab View
@@ -20,9 +19,9 @@ export const PwcCollabTab = () => {
     const [{ inTeams, theme, context }] = useTeams();
     const [entityId, setEntityId] = useState<string | undefined>();
     const [teamId, setTeamId] = useState<string | undefined>();
-    const [name, setName] = useState<string>();
+    const [teamName, setTeamName] = useState<string>();
     const [error, setError] = useState<string>();
-    const [selectedMenuItem, setSelectedMenuItem] = useState('add');
+    const [selectedMenuItem, setSelectedMenuItem] = useState("members");
 
     const [ssoToken, setSsoToken] = useState<string>();
     const [msGraphOboToken, setMsGraphOboToken] = useState<string>();
@@ -37,7 +36,7 @@ export const PwcCollabTab = () => {
             // save it to state
             successCallback: (token: string) => {
             const decoded: { [key: string]: any; } = jwtDecode(token) as { [key: string]: any; };
-            setName(decoded!.name);
+            // setName(decoded!.name);
             setSsoToken(token);
             microsoftTeams.appInitialization.notifySuccess();
             },
@@ -62,6 +61,7 @@ export const PwcCollabTab = () => {
         if (context) {
             setEntityId(context.entityId);
             setTeamId(context.groupId);
+            setTeamName(context.teamName);
         }
     }, [context]);
 
@@ -101,26 +101,20 @@ export const PwcCollabTab = () => {
      */
     return (
         <Provider theme={theme}>
-        <Flex column gap="gap.smaller" padding="padding.medium">
-            <Header content="External Guest Collaboration" />
+        <Flex column gap="gap.smaller" padding="padding.medium" hAlign="center">
             {error && <div><Text content={`An SSO error occurred ${error}`} /></div>}
+            <NavMenu selected={selectedMenuItem} callback={handleMenuSelect} />
         </Flex>
-        <Divider />
         <Flex gap="gap.large" padding="padding.medium"
             styles={{
-            padding: '1rem 4rem 4rem 1rem'
+            padding: '1rem 2rem 4rem 4rem'
             }}>
-            <NavMenu selected={selectedMenuItem} callback={handleMenuSelect} />
-            {selectedMenuItem === "add" && (
-                <GuestForm token={msGraphOboToken} teamId={teamId}/>
+            {selectedMenuItem === "members" && (
+                <MembersView token={msGraphOboToken} teamId={teamId} teamName={teamName}/>
             )}
 
-            {selectedMenuItem === "status" && (
+            {selectedMenuItem === "approvals" && (
                 <GuestList token={msGraphOboToken} teamId={teamId} />
-            )}
-
-            {selectedMenuItem === "faq" && (
-                <Fragment>Add Documentation here</Fragment>
             )}
 
             {selectedMenuItem === "dbtest" && (
