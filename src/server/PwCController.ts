@@ -75,9 +75,10 @@ export const addApprover = async (req, res) => {
 // continue below
 
 export const getUserByEmail = async (req, res) => {
-    log(req.params.domain);
+    log('HIT')
+    log(req.params.email);
     conn.query(
-        "SELECT * FROM table_approver WHERE email=?",
+        "SELECT * FROM table_users WHERE email=?",
         [req.params.email],
         function (err, results) {
             if (err) throw err;

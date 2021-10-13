@@ -59,12 +59,13 @@ export async function getUserByEmail(email) {
     // Fetch response
     const response = await fetch(endpoint, requestObject);
     if (response.ok) {
+        //console.log("worked with: "+response.json());
         return await response.json();
     }
 }
 
 export async function addApproval(approval) {
-    let endpoint = "/addApprover";
+    let endpoint = "/addApproval";
     const requestObject = {
         method: "POST",
         headers: {

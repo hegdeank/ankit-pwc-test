@@ -141,3 +141,22 @@ export async function sendEmail(token, sendMail): Promise<any> {
         return await response;
     }
 }
+
+// get the current user who is using the app - need this for their email
+export async function getCurrentUser(token) {
+    const endpoint = `${baseUrl}me?$select=mail`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            authorization: `bearer ${token}`,
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+    return;
+} 

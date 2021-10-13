@@ -5,7 +5,8 @@ import {
     Text, Header, Pill, PillGroup, TextArea
 } from "@fluentui/react-northstar";
 import { CloseIcon, ParticipantAddIcon } from "@fluentui/react-icons-northstar";
-import { invite, addTeamMember, sendEmail } from "../services/GraphService";
+import { invite, addTeamMember, sendEmail, getCurrentUser } from "../services/GraphService";
+import {getApproverByDomain, getUserByEmail, getApprovers, addApproval } from "../services/PwCService";
 // import { getApprover } from "../PwCService";
 
 export function InviteDialog(props) {
@@ -21,7 +22,7 @@ export function InviteDialog(props) {
     const token = props.token;
     const teamId = props.teamId;
     const teamName = props.teamName;
-
+    
     const handleGuestInput = (event : any, data: any) => {
         setGuestsInput(data.value);
     };
@@ -31,43 +32,94 @@ export function InviteDialog(props) {
 
     // On submit, guestInput will be separated out into individual strings,
     // delimited by commas, and added into guests.
-    const handleSubmit = () => {
+    const handleSubmit = async() => {
         const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
         const guestSplit = guestsInput.split(",");
         const addGuest: Set<string> = new Set();
         const approvedDomains: Set<string> = new Set();
-        let unapprovedDomains: Set<string> = new Set();
+        const unapprovedDomains: Set<string> = new Set();
+        const unknownDomains: Set<string> = new Set();
         const approversValid: Set<any> = new Set();
+        const approversInvalid: Set<any> = new Set();
         let rejectGuest: string = "";
         let error: string = "";
         
+        const userData = await getCurrentUser(
+            token
+        )
+
+        //console.log(userData.mail);
+        const userEmail = userData.mail; // email needed to get user specific data from db
+        
+        const userKey = await getUserByEmail(
+            userEmail
+        );
+        //console.log(userKey)
+        const userParams = userKey.data[0]; // data from query that holds: id, firstname, lastname, email, permission
+        
+        //const approvData = await getApprovers();
+        //console.log(approvData);
+        //for (let a of approvData.data){
+        //     console.log(a);
+        //}
+        
+
         for (let guest of guestSplit) {
             guest = guest.trim().toLowerCase();
             if (re.test(guest)) {
                 let domain = guest.split("@").pop();
                 if (domain) {
                     addGuest.add(guest);
-                    // if (!approvedDomains.has(domain)) {
-                    //     const approver = getApprover(domain);
-                    //     if (approver) {
-                    //         console.log(`Approver found: ${approver.email}`);
-
-                    //         addGuest.add(guest);
-                    //         approvedDomains.add(domain);
-                    //         approversValid.add({
-                    //             email: approver.email,
-                    //             company: approver.company,
-                    //             name: `${approver.firstname} ${approver.lastname}`
-                    //         });
-                    //     } else {
-                    //         console.log(`Approver not found for domain: ${domain}`);
-                    //         rejectGuest += `${guest}, `;
-                    //         unapprovedDomains.add(domain);
-                    //     }
-                    // } else {
-                    //     console.log(`Approver found for domain: ${domain}`)
-                    //     addGuest.add(guest);
-                    // }
+                     if (!approvedDomains.has(domain)) {
+                        const approver = await getApproverByDomain(domain);  // see if we have stored the domain
+                        const approverData = approver.data[0]; // get that data: id, firstname, lastname, email, company, domain
+                    //    console.log(approverData)
+                        if (approverData) {
+                            console.log(`Approver found: ${approverData.email}`);
+                            // check permissions
+                            if(userParams.permission.includes(approverData.id)){
+                                // notfiy that request was sent
+                                addGuest.add(guest);
+                                approvedDomains.add(domain);
+                                // keep below
+                                // approversValid.add({
+                                //     email: approverData.email,
+                                //     company: approverData.company,
+                                //     name: `${approverData.firstname} ${approverData.lastname}`
+                                // });
+                            } else{
+                                // bug : still adds to the list of emails we display
+                                // notify that approval was made AND MAKE SURE WE DONT ADD ANOTHER: create get approver by id
+                                console.log(`You are not approved for domain: ${domain}`);
+                                unapprovedDomains.add(domain);
+                                const createApproval = await addApproval({
+                                    app_id: approverData.id,
+                                    use_id: userParams.id,
+                                    channel: teamName
+                                });
+                                // keep below
+                                // approversInvalid.add({
+                                //     email: approverData.email,
+                                //     company: approverData.company,
+                                //     name: `${approverData.firstname} ${approverData.lastname}`
+                                // });
+                            }
+                        } else {
+                             console.log(`Approver not found for domain: ${domain}`);
+                             rejectGuest += `${guest}, `;
+                             unknownDomains.add(domain);
+                        }
+                    } else {
+                         console.log(`Approver found for domain: ${domain}`)
+                         addGuest.add(guest);
+                         // keep below
+                         // approversValid.add({
+                         //     email: approverData.email,
+                         //     company: approverData.company,
+                         //     name: `${approverData.firstname} ${approverData.lastname}`
+                         // });
+                         
+                    }
                 }
             } else {
                 rejectGuest += `${guest}, `;
@@ -77,6 +129,16 @@ export function InviteDialog(props) {
         if (rejectGuest !== "") {
             error = "Enter in valid emails, delimited by commas, as input";
         } 
+        if (unknownDomains.size !== 0) {
+            if (error !== "") {
+                error += ". ";
+            }
+            let formattedDomains = "";
+            for (let domain of unknownDomains.values()) {
+                formattedDomains += `${domain}, `
+            }
+            error += `Following domains are not yet approved: ${formattedDomains.slice(0, -2)}`;
+        }
         if (unapprovedDomains.size !== 0) {
             if (error !== "") {
                 error += ". ";
@@ -85,7 +147,7 @@ export function InviteDialog(props) {
             for (let domain of unapprovedDomains.values()) {
                 formattedDomains += `${domain}, `
             }
-            error += `Following domains are not yet approved: ${formattedDomains.slice(0, -2)}`;
+            error += `You do not have access to: ${formattedDomains.slice(0, -2)} - A approval has been created and a notification was sent to the approver from your mailbox.`;
         }
         
         setError(error);
@@ -184,7 +246,8 @@ PLEASE NOTE: This is an automated email. Contact the sending party for more info
                     contentType: "Text",
                     content: `Hello ${approver.name},\n
 I would like to be able to collaborate with ${approver.company} on our project.\n\n\n
-PLEASE NOTE: This is an automated email. Contact the sending party for more information if needed.`
+PLEASE NOTE: This is an automated email. A request will be made in the Collaboration bot. You can access this approval from any channel. \n
+Contact the sending party for more information if needed.`
                 },
                 toRecipients: [
                     {
