@@ -7,10 +7,8 @@ import jwtDecode from "jwt-decode";
 
 import { NavMenu } from "./components/NavMenu";
 import { MembersView } from "./components/MembersView";
-import { GuestForm } from "./components/GuestForm";
-import { GuestList } from "./components/GuestList";
 import { DatabaseTest } from "./components/DatabaseTest";
-import { getApprovers, getApproverByDomain } from "./services/PwCService";
+import { ApprovalsView } from "./components/ApprovalsView";
 
 /**
  * The Main Tab View
@@ -114,7 +112,7 @@ export const PwcCollabTab = () => {
             )}
 
             {selectedMenuItem === "approvals" && (
-                <GuestList token={msGraphOboToken} teamId={teamId} />
+                <ApprovalsView token={msGraphOboToken} teamId={teamId} teamName={teamName}/>
             )}
 
             {selectedMenuItem === "dbtest" && (
@@ -124,7 +122,3 @@ export const PwcCollabTab = () => {
         </Provider>
     );
 };
-
-
-// Deny guests by default, allow by specified basis through domain
-// Deny by domain, create access packages through manage identities

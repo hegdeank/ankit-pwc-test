@@ -2,7 +2,7 @@ import * as React from "react";
 import { Fragment, useEffect, useState, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
 import {
-    Accordion, Button, Dialog, Status, Table, Input,
+    Accordion, Avatar, Button, Dialog, Status, Table, Input,
     Header, Flex, Loader, Text
 } from "@fluentui/react-northstar";
 import { MoreIcon, ParticipantAddIcon, SearchIcon } from "@fluentui/react-icons-northstar";
@@ -103,7 +103,12 @@ export function MembersView(props) {
                 key: user.id,
                 items: [
                     {
-                        content: user.displayName,
+                        content: (
+                            <Flex vAlign="center" gap="gap.small">
+                                <Avatar name={user.displayName} />
+                                <Text content={user.displayName} />
+                            </Flex>
+                        ),
                         key: `displayName-${user.id}`
                     },
                     {
@@ -183,7 +188,19 @@ export function MembersView(props) {
             panels.push(2);
         }
         setActivePanels(panels);
-    }, [ownerRows, memberRows, pendingRows])
+    }, [ownerRows, memberRows, pendingRows]);
+
+    /**
+     * Toggles accordion panels when panel titles are clicked
+     * @param panelIndex Index of panel title clicked
+     */
+    const handlePanelClick = (panelIndex : number) => {
+        if (activePanels.includes(panelIndex)) {
+            setActivePanels(activePanels.filter(panel => panel !== panelIndex));
+        } else {
+            setActivePanels([...activePanels, panelIndex]);
+        }
+    }
 
     return (
         <Fragment>
@@ -204,9 +221,10 @@ export function MembersView(props) {
                                         <Text disabled={ownerRows.length === 0 ? true : false} content={`(${ownerRows.length})`} />
                                     </span>
                                 ),
-                                disabled: ownerRows.length === 0 ? true : false
+                                disabled: ownerRows.length === 0 ? true : false,
+                                onClick: () => handlePanelClick(0)
                             },
-                            content:
+                            content:(
                                 <Table
                                     variables={{
                                         cellContentOverflow: "none"
@@ -217,7 +235,7 @@ export function MembersView(props) {
                                         width: "100%"
                                     }}
                                 />
-                            
+                            )
                         },
                         {
                             title: {
@@ -227,9 +245,10 @@ export function MembersView(props) {
                                         <Text disabled={memberRows.length === 0 ? true : false} content={`(${memberRows.length})`} />
                                     </span>
                                 ),
-                                disabled: memberRows.length === 0 ? true : false
+                                disabled: memberRows.length === 0 ? true : false,
+                                onClick: () => handlePanelClick(1)
                             },
-                            content: 
+                            content: (
                                 <Table
                                     variables={{
                                         cellContentOverflow: "none"
@@ -240,6 +259,7 @@ export function MembersView(props) {
                                         width: "100%"
                                     }}
                                 />
+                            )
                         },
                         {
                             title: {
@@ -249,9 +269,10 @@ export function MembersView(props) {
                                         <Text disabled={pendingRows.length === 0 ? true : false} content={`(${pendingRows.length})`} />
                                     </span>
                                 ),
-                                disabled: pendingRows.length === 0 ? true : false
+                                disabled: pendingRows.length === 0 ? true : false,
+                                onClick: () => handlePanelClick(2)
                             },
-                            content: 
+                            content: (
                                 <Table
                                     variables={{
                                         cellContentOverflow: "none"
@@ -262,6 +283,7 @@ export function MembersView(props) {
                                         width: "100%"
                                     }}
                                 />
+                            )
                         }
                     ]
                 } />

@@ -5,11 +5,10 @@ import { Menu } from "@fluentui/react-northstar";
 export function NavMenu(props) {
     const [selected, setSelected] = useState(props.selected);
 
-    const steps = ["members", "approvals", "dbtest"];
+    const steps = ["members", "approvals"];
     const stepNames: { [key: string]: string } = {
         members: "View Members",
-        approvals: "Approvals",
-        dbtest: "Database Test"
+        approvals: "Approvals"
     };
 
     const menuItems = steps.map(step => {

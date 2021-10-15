@@ -126,6 +126,7 @@ export async function removeTeamMember(token, teamId, memberId): Promise<any> {
 // used for sending email to needed approver for either a request to be allowed to add or for notifying that we have added
 export async function sendEmail(token, sendMail): Promise<any> {
     const endpoint = `${baseUrl}me/sendMail`;
+    // const endpoint = `${baseUrl}users/TeamsBot@pwcteamsbot.onmicrosoft.com/sendMail`
     const requestObject = {
         method: "POST",
         headers: {

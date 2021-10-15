@@ -31,7 +31,6 @@ export const getApprovers = async (req, res) => {
 };
 
 export const getApproverByDomain = async (req, res) => {
-    log(req.params.domain);
     conn.query(
         "SELECT * FROM table_approver WHERE domain=?",
         [req.params.domain],
@@ -46,8 +45,22 @@ export const getApproverByDomain = async (req, res) => {
     );
 };
 
+export const getApproverByEmail = async (req, res) => {
+    conn.query(
+        "SELECT * FROM table_approver WHERE email=?",
+        [req.params.email],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            log(ret);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};
+
 export const addApprover = async (req, res) => {
-    log(req.body);
     conn.query(
         "INSERT INTO table_approver (firstname, lastname, email, domain, company) VALUES (?,?,?,?,?)",
         [req.body.firstname, req.body.lastname, req.body.email, req.body.domain, req.body.company],
@@ -75,8 +88,6 @@ export const addApprover = async (req, res) => {
 // continue below
 
 export const getUserByEmail = async (req, res) => {
-    log('HIT')
-    log(req.params.email);
     conn.query(
         "SELECT * FROM table_users WHERE email=?",
         [req.params.email],
@@ -99,6 +110,7 @@ export const getUserByEmail = async (req, res) => {
 
 export const addApproval = async (req, res) => {
     log(req.body);
+    log("hello?");
     conn.query(
         "INSERT INTO table_approvals (approver_id, user_id, teams_channel, approval_status) VALUES (?,?,?,?)",
         [req.body.app_id, req.body.use_id, req.body.channel,1],
@@ -136,7 +148,6 @@ export const addApproval = async (req, res) => {
 
 
 export const getApproverApprovals = async (req, res) => {
-    log(req.params.domain);
     conn.query(
         "SELECT table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id WHERE table_approver.email = ?;",
         [req.params.email],
@@ -163,7 +174,6 @@ export const getApproverApprovals = async (req, res) => {
 //Process to show data
 
 export const getUserApprovals = async (req, res) => {
-    log(req.params.domain);
     conn.query(
         "SELECT table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id WHERE table_users.email = ?;",
         [req.params.email],
@@ -180,7 +190,6 @@ export const getUserApprovals = async (req, res) => {
 
 //Get the UserID by email for updating the approval_status
 export const getUserID = async (req, res) => {
-    log(req.params.email);
     conn.query(
         "SELECT * FROM table_users WHERE email=?",
         [req.params.email],

@@ -30,6 +30,22 @@ export async function getApproverByDomain(domain) {
     }
 }
 
+export async function getApproverByEmail(email) {
+    let endpoint = `/getApproverByEmail/${email}`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
+
 export async function addApprover(approver) {
     let endpoint = "/addApprover";
     const requestObject = {

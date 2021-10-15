@@ -5,7 +5,11 @@ import * as morgan from "morgan";
 import { MsTeamsApiRouter, MsTeamsPageRouter } from "express-msteams-host";
 import * as debug from "debug";
 import * as compression from "compression";
-import { getApproverByDomain, getApprovers, addApprover,  getUserByEmail, addApproval, getApproverApprovals ,getUserApprovals } from "./PwCController";
+import { 
+    getApproverByDomain, getApprovers, getApproverByEmail,
+    addApprover,  getUserByEmail, addApproval, getApproverApprovals,
+    getUserApprovals 
+} from "./PwCController";
 
 import jwtDecode from "jwt-decode";
 import Axios, { AxiosResponse } from "axios";
@@ -36,6 +40,8 @@ express.use(bodyParser.urlencoded({
 express.get("/getApprover", getApprovers);
 
 express.get("/getApprover/:domain", getApproverByDomain);
+
+express.get("/getApproverByEmail/:email", getApproverByEmail);
 
 express.post("/addApprover", addApprover);
 

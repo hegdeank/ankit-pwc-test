@@ -1,26 +1,26 @@
-//Method1: connecting the database
-//Reminder:!!!!!!!!
-//test-command: node datainfo.jsx
-//first need to npm install mysql
-//if module not found-->NEED TO DO npm install mysql
-var mysql      = require("mysql")
-var connection = mysql.createConnection({
-  //connection info for Azure mysql database
-  host:'pwcmysql.mysql.database.azure.com',
-  user     : 'azureroot@pwcmysql',
-  password : 'ASD@2021',
-  //port:'3306',
-  database:"dbpwc"
+const mysql = require("mysql")
+const conn  = mysql.createConnection({
+    host     : "pwc-examplesource.mysql.database.azure.com",
+    user     : "capstoneteam@pwc-examplesource",
+    password : "pwcteam$21",
+    database : "dbpwc"
 });
  
-connection.connect();
- 
+conn.connect();
+let query = "SELECT table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id WHERE table_approver.email = 'Nguye610@pwcteamsbot.onmicrosoft.com'";
+query = "SELECT * FROM table_approvals";
+// query = "SELECT * FROM table_users WHERE id=4";
+conn.query(query, function (error, results, fields) {
+    if (error) throw error;
+    const rows = JSON.stringify(results);
+    console.log(query);
+    console.log(JSON.parse(rows));
+});
 
-connection.query('SELECT * FROM table_approver', function (error, results, fields) {
-  if (error) throw error;
-  var ret =JSON.stringify(results);
-  var json = JSON.parse(ret);
-  console.log('The solution is: ', json);  //json[0]['email]
+conn.query("SHOW WARNINGS", function (error, results, fields) {
+    if (error) throw error;
+    const rows = JSON.stringify(results);
+    console.log(JSON.parse(rows));
 });
-connection.end();
-//module.exports=datainfo;
+
+conn.end();
