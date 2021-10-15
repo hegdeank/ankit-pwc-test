@@ -223,13 +223,15 @@ export const getUserID = async (req, res) => {
 export const updateApprovalStatus = async (req, res) => {
     var user_id=getUserID(req,res);   //get userid from table_users table
     var status = 1;                   //approval_status=1 -->pending/default
-    if (req.param.status=="no"){    //approval_status=0 --> deny
+    if (req.params.status=="Accept"){    //approval_status=0 --> deny
         status=0;
     }
-    if (req.param.status=="yes"){   //approval_status=2 -->approved
+    if (req.param.status=="Reject"){   //approval_status=2 -->approved
          status=2;
      }
     conn.query(
+        // "UPDATE table_approvals SET approval_status=? where user_id=? and teams_channel=?",
+        // [status,user_id,req.params.teams_channel],
         "UPDATE table_approvals SET approval_status=? where user_id=?",
         [status,user_id],
         function (err, results) {
