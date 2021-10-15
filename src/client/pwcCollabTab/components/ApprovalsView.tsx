@@ -6,11 +6,40 @@ import {
 } from "@fluentui/react-northstar";
 import { SearchIcon } from "@fluentui/react-icons-northstar";
 import { getCurrentUser } from "../services/GraphService";
-import { getApproverApprovals, getApproverByEmail } from "../services/PwCService";
+import { getApproverApprovals, getApproverByEmail, updateApprovalStatus } from "../services/PwCService";
 
 export function ApprovalsView(props) {
     const [approvals, setApprovals] = useState<any[]>([]);
     const token = props.token;
+    
+    /**
+     * 
+     * Update Status for table_approvals  SudoCodeTest
+     */
+    const updateApprovalStatusApproved = useCallback(async () => {
+        if (!token) { return; }
+        const userResponse = await getCurrentUser(token)
+        const userEmail = userResponse.mail; // Email of current user
+        var status="Accept";
+        const approverResponse = await updateApprovalStatus(status,userEmail);
+        console.log("check test");
+
+    }, [token]);
+
+    /**
+     * 
+     * Update Status for table_approvals  SudoCodeTest
+     */
+    const updateApprovalStatusDennied = useCallback(async () => {
+        if (!token) { return; }
+        const userResponse = await getCurrentUser(token)
+        const userEmail = userResponse.mail; // Email of current user
+        var status="Reject";
+        const approverResponse = await updateApprovalStatus(status,userEmail);
+        console.log("check test");
+    
+    }, [token]);
+
 
     /**
      * Get the approvals for the current user
@@ -70,8 +99,8 @@ export function ApprovalsView(props) {
                                     </Card.Header>
                                     <Card.Footer>
                                         <Flex space="around">
-                                            <Button content="Accept" />
-                                            <Button content="Reject" />
+                                            <Button content="Accept" onClick={updateApprovalStatusApproved}/>
+                                            <Button content="Reject"  onClick={updateApprovalStatusDennied} />
                                         </Flex>
                                     </Card.Footer>
                                 </Card>
