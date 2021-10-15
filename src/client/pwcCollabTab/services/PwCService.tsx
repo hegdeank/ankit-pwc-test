@@ -128,3 +128,21 @@ export async function getUserApprovals(email) {
         return await response.json();
     }
 }
+
+//SudoCode Test
+export async function updateApprovalStatus(status,email) {
+    let endpoint = `/updateApprovalStatus/${status}${email}`;
+    const requestObject = {
+        method: "POST",
+        headers: {
+            "content-type": "application/json"
+        },
+        body: JSON.stringify(status) ///????
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
