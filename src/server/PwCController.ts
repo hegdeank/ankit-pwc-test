@@ -173,9 +173,21 @@ export const getApproverApprovals = async (req, res) => {
 
 //Process to show data
 
+// SELECT table_approvals.id, table_approver.email as ApproverEmail, 
+// table_approver.domain as Domain, table_users.email as UsersEmail, /
+// table_approvals.teams_channel, table_approvals.approval_status 
+// FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver 
+// ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id 
+// INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id 
+// WHERE table_users.email = 'PwCTeamsBot@pwcteamsbot.onmicrosoft.com';
+
 export const getUserApprovals = async (req, res) => {
     conn.query(
-        "SELECT table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id WHERE table_users.email = ?;",
+        "SELECT table_approvals.id, table_approver.email as ApproverEmail, table_approver.domain as Domain,\
+        table_users.email as UsersEmail,table_approvals.teams_channel, table_approvals.approval_status \
+        FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id \
+        INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id \
+        WHERE table_users.email = ?;",
         [req.params.email],
         function (err, results) {
             if (err) throw err;
