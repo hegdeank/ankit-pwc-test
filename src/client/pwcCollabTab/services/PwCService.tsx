@@ -130,19 +130,25 @@ export async function getUserApprovals(email) {
 }
 
 //SudoCode Test
-export async function updateApprovalStatus(status,email) {
-    let endpoint = `/updateApprovalStatus/${status}${email}`;
+export async function updateApprovalStatus(status,email,team) {
+    let endpoint = `/updateApprovalStatus/${status}${email}${team}`;
     const requestObject = {
         method: "POST",
         headers: {
             "content-type": "application/json"
         },
-        body: JSON.stringify(status) ///????
+        body: JSON.stringify(status) ////?????Do not understand this line??????
     };
 
+    //log infos for debugging
+    console.log("check Service");  //check in service class
+    console.log(team);
+    console.log(email);
+    console.log(status);
     // Fetch response
     const response = await fetch(endpoint, requestObject);
     if (response.ok) {
+        console.log("Fetched!");
         return await response.json();
     }
 }

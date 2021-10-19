@@ -11,35 +11,36 @@ import { getApproverApprovals, getApproverByEmail, updateApprovalStatus } from "
 export function ApprovalsView(props) {
     const [approvals, setApprovals] = useState<any[]>([]);
     const token = props.token;
+    var input_email="test@test.com";  //userEmail initialize
+    var team="testchannel";             //team_channel initialize
     
     /**
      * 
-     * Update Status for table_approvals  SudoCodeTest
+     * Update Status for table_approvals
      */
-    const updateApprovalStatusApproved = useCallback(async () => {
-        if (!token) { return; }
-        const userResponse = await getCurrentUser(token)
-        const userEmail = userResponse.mail; // Email of current user
+    const updateApprovalStatusApproved = async () => {
         var status="Accept";
-        const approverResponse = await updateApprovalStatus(status,userEmail);
-        console.log("check test");
+        const approverResponse = updateApprovalStatus(status,input_email,team);
+        console.log("check View");  //checking in View Class
+        console.log(status);
+        console.log(input_email);
+        console.log(team);
 
-    }, [token]);
+    };
 
     /**
      * 
-     * Update Status for table_approvals  SudoCodeTest
+     * Update Status for table_approvals  
      */
-    const updateApprovalStatusDennied = useCallback(async () => {
-        if (!token) { return; }
-        const userResponse = await getCurrentUser(token)
-        const userEmail = userResponse.mail; // Email of current user
+    const updateApprovalStatusDennied = async () => {
         var status="Reject";
-        const approverResponse = await updateApprovalStatus(status,userEmail);
-        console.log("check test");
+        const approverResponse = updateApprovalStatus(status,input_email,team);
+        console.log("check View");
+        console.log(status);
+        console.log(input_email);
+        console.log(team);
     
-    }, [token]);
-
+    };
 
     /**
      * Get the approvals for the current user
@@ -49,6 +50,8 @@ export function ApprovalsView(props) {
 
         const userResponse = await getCurrentUser(token)
         const userEmail = userResponse.mail; // Email of current user
+
+        input_email=userEmail;//add: use it in the UpdateApprovalStatus function
         
         const approverResponse = await getApproverByEmail(userEmail); // Check if current user is an approver
         const approver = approverResponse.data[0];
@@ -61,6 +64,8 @@ export function ApprovalsView(props) {
             // Find approvals in database
             const responsePayload = await getApproverApprovals(approver.email);
             const approvalResponse = responsePayload.data.map((approval: any) => {
+                //add: use it in the UpdateApprovalStatus function
+                team=approval.teams_channel;
                 return {
                     id: approval.id,
                     email: approval.UsersEmail,

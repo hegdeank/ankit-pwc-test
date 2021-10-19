@@ -229,11 +229,17 @@ export const updateApprovalStatus = async (req, res) => {
     if (req.param.status=="Reject"){   //approval_status=2 -->approved
          status=2;
      }
+
+     //log infos for debugging
+     log("Controller check"); //check in controller class
+     log(status);
+     log(user_id);
+     log(req.params.team);
+
+     //since a user can be in multiple team channels
     conn.query(
-        // "UPDATE table_approvals SET approval_status=? where user_id=? and teams_channel=?",
-        // [status,user_id,req.params.teams_channel],
-        "UPDATE table_approvals SET approval_status=? where user_id=?",
-        [status,user_id],
+         "UPDATE table_approvals SET approval_status=? where user_id=? and teams_channel=?",
+         [status,user_id,req.params.team],
         function (err, results) {
             if (err) throw err;
             const ret = JSON.stringify(results);
