@@ -195,25 +195,7 @@ PLEASE NOTE: This is an automated email. Contact the sending party for more info
         console.log(emailResponse);
     }
 
-    const testGetEmails = async () => {
-        const endpoint = "https://graph.microsoft.com/v1.0/me/mailFolders/AAMkADg3MDIwZmFjLTkxOWUtNDY0ZC1hYWEyLWEzM2RmZDI1Zjc1NAAuAAAAAACfVx877t67RK6pxF2ePe4eAQDdjLno_WHMQ4WFqG1LBFGwAAAAAAEJAAA=/messages";
-        // const endpoint = "https://graph.microsoft.com/v1.0/users/727dd195-0822-487d-af2c-9f098ebfd739/mailFolders/"
-        const requestObject = {
-            method: "GET",
-            headers: {
-                authorization: `bearer ${token}`,
-                "content-type": "application/json"
-            }
-        };
-
-        // "AAMkADg3MDIwZmFjLTkxOWUtNDY0ZC1hYWEyLWEzM2RmZDI1Zjc1NAAuAAAAAACfVx877t67RK6pxF2ePe4eAQDdjLno_WHMQ4WFqG1LBFGwAAAAAAEMAAA=" Inbox
-        // "AAMkADg3MDIwZmFjLTkxOWUtNDY0ZC1hYWEyLWEzM2RmZDI1Zjc1NAAuAAAAAACfVx877t67RK6pxF2ePe4eAQDdjLno_WHMQ4WFqG1LBFGwAAAAAAEJAAA=" Sent Items
-        // Fetch response
-        const response = await fetch(endpoint, requestObject);
-        if (response.ok) {
-            console.log(await response.json());
-        }
-    }
+    
 
     // Email the approver to ask about inviting users
     // Link: https://docs.microsoft.com/en-us/graph/api/user-sendmail?view=graph-rest-1.0&tabs=javascript
@@ -276,12 +258,6 @@ Contact the sending party for more information if needed.`
                         </FormField>
                     </Form>
                     { errors.map(err => <Text error content={err} />)}
-                    <Button content="Test Email" onClick={() => sendEmailApproverNotify({
-                                email: "nguye610@msu.edu",
-                                company: "Test",
-                                name: "Sean Nguyen"
-                    })} />
-                    <Button content="Test Get Email" onClick={testGetEmails} />
                     
                     <PillGroup>
                     {

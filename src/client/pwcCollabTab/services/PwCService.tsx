@@ -80,6 +80,23 @@ export async function getUserByEmail(email) {
     }
 }
 
+export async function updateUserPermissions(id, permission) {
+    // onst stringPermission = 
+    let endpoint = `/updateUserPermissions?id=${id}`;
+    const requestObject = {
+        method: "PUT",
+        headers: {
+            "content-type": "application/json"
+        },
+        body: JSON.stringify({permission: permission.toString()})
+    };
+
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
+
 export async function addApproval(approval) {
     let endpoint = "/addApproval";
     const requestObject = {
@@ -97,8 +114,8 @@ export async function addApproval(approval) {
     }
 }
 
-export async function getApproverApprovals(email) {
-    let endpoint = `/getApproverApprovals/${email}`;
+export async function getApproverApprovals(email, status) {
+    let endpoint = `/getApproverApprovals?email=${email}&status=${status}`;
     const requestObject = {
         method: "GET",
         headers: {
@@ -130,25 +147,18 @@ export async function getUserApprovals(email) {
 }
 
 //SudoCode Test
-export async function updateApprovalStatus(status,email,team) {
-    let endpoint = `/updateApprovalStatus/${status}${email}${team}`;
+export async function updateApprovalStatus(id, status) {
+    let endpoint = `/updateApprovalStatus?id=${id}`;
     const requestObject = {
-        method: "POST",
+        method: "PUT",
         headers: {
             "content-type": "application/json"
         },
-        body: JSON.stringify(status) ////?????Do not understand this line??????
+        body: JSON.stringify({status: status})
     };
 
-    //log infos for debugging
-    console.log("check Service");  //check in service class
-    console.log(team);
-    console.log(email);
-    console.log(status);
-    // Fetch response
     const response = await fetch(endpoint, requestObject);
     if (response.ok) {
-        console.log("Fetched!");
         return await response.json();
     }
 }

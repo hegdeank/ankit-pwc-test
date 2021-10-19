@@ -1,45 +1,46 @@
 import * as React from "react";
 import { Fragment, useEffect, useState, useCallback } from "react";
-import { useTeams } from "msteams-react-base-component";
 import {
-    Avatar, Card, Button, Flex, Grid, Input, Text
+    Accordion, Avatar, Card, Button, Flex, Grid, Input, Text
 } from "@fluentui/react-northstar";
 import { SearchIcon } from "@fluentui/react-icons-northstar";
 import { getCurrentUser } from "../services/GraphService";
-import { getApproverApprovals, getApproverByEmail, updateApprovalStatus } from "../services/PwCService";
+import { getApproverApprovals, getApproverByEmail, updateApprovalStatus, updateUserPermissions } from "../services/PwCService";
 
 export function ApprovalsView(props) {
-    const [approvals, setApprovals] = useState<any[]>([]);
+    const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
+    const [approvedApprovals, setApprovedApprovals] = useState<any[]>([]);
+    const [rejectedApprovals, setRejectedApprovals] = useState<any[]>([]);
     const token = props.token;
-    var input_email="test@test.com";  //userEmail initialize
-    var team="testchannel";             //team_channel initialize
     
     /**
-     * 
-     * Update Status for table_approvals
+     * Approve approvals and update inviter permissions
+     * @param approvalId Used to update approval
+     * @param inviterId Used to update inviter permissions
+     * @param inviterPermissions Inviter permissions
+     * @param approverId Used to update inviter permissions
      */
-    const updateApprovalStatusApproved = async () => {
-        var status="Accept";
-        const approverResponse = updateApprovalStatus(status,input_email,team);
-        console.log("check View");  //checking in View Class
-        console.log(status);
-        console.log(input_email);
-        console.log(team);
-
+    const handleApprove = async (approvalId, inviterId, inviterPermissions, approverId) => {
+        const approverResponse = updateApprovalStatus(approvalId, 2);
+        const permissions = new Set(inviterPermissions.split(","));
+        permissions.add(approverId);
+        const userResponse = updateUserPermissions(inviterId, Array.from(permissions));
+        getApprovals();
     };
 
     /**
-     * 
-     * Update Status for table_approvals  
+     * Reject approvals and revoke inviter permissions
+     * @param approvalId Used to update approval
+     * @param inviterId Used to update inviter permissions
+     * @param inviterPermissions Inviter permissions
+     * @param approverId Used to update inviter permissions
      */
-    const updateApprovalStatusDennied = async () => {
-        var status="Reject";
-        const approverResponse = updateApprovalStatus(status,input_email,team);
-        console.log("check View");
-        console.log(status);
-        console.log(input_email);
-        console.log(team);
-    
+    const handleReject = async (approvalId, inviterId, inviterPermissions, approverId) => {
+        const approverResponse = updateApprovalStatus(approvalId, 0);
+        const permissions = inviterPermissions.split(",");
+        permissions.splice(permissions.indexOf(approverId), 1)
+        const userResponse = updateUserPermissions(inviterId, permissions);
+        getApprovals();
     };
 
     /**
@@ -50,8 +51,8 @@ export function ApprovalsView(props) {
 
         const userResponse = await getCurrentUser(token)
         const userEmail = userResponse.mail; // Email of current user
-
-        input_email=userEmail;//add: use it in the UpdateApprovalStatus function
+        
+        // input_email = userEmail;//add: use it in the UpdateApprovalStatus function
         
         const approverResponse = await getApproverByEmail(userEmail); // Check if current user is an approver
         const approver = approverResponse.data[0];
@@ -62,24 +63,71 @@ export function ApprovalsView(props) {
          */
         if (approver) {
             // Find approvals in database
-            const responsePayload = await getApproverApprovals(approver.email);
-            const approvalResponse = responsePayload.data.map((approval: any) => {
-                //add: use it in the UpdateApprovalStatus function
-                team=approval.teams_channel;
-                return {
-                    id: approval.id,
-                    email: approval.UsersEmail,
-                    team: approval.teams_channel
-                };
-            });
-    
-            setApprovals(approvalResponse);
+            const pendingPayload = await getApproverApprovals(approver.email, 1);
+            const pendingResponse = pendingPayload.data;
+            const approvedPayload = await getApproverApprovals(approver.email, 2);
+            const approvedResponse = approvedPayload.data;
+            const rejectedPayload = await getApproverApprovals(approver.email, 0);
+            const rejectedResponse = rejectedPayload.data;
+            setPendingApprovals(pendingResponse);
+            setApprovedApprovals(approvedResponse);
+            setRejectedApprovals(rejectedResponse);
         }
     }, [token]);
 
     useEffect(() => {
         getApprovals();
     }, [token]);
+
+    const ApprovalCard = (approval) => {
+        return (
+            <Card fluid id={`approval_${approval.id}`}>
+                <Card.Header>
+                    <Flex gap="gap.small">
+                        <Avatar name={`${approval.inviterFirst} ${approval.inviterLast}`} />
+                        <Flex column>
+                            <Text content={`${approval.inviterFirst} ${approval.inviterLast}`} weight="bold" />
+                            <Text content={approval.inviterEmail} />
+                        </Flex>
+                    </Flex>
+                </Card.Header>
+                <Card.Body style={{
+                    padding: "0 2.6rem"
+                }}>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Team" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.team} />
+                        </Flex.Item>
+                    </Flex>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Company" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.company} />
+                        </Flex.Item>
+                    </Flex>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Domain" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.domain} />
+                        </Flex.Item>
+                    </Flex>
+                </Card.Body>
+                <Card.Footer>
+                    <Flex space="around">
+                        <Button content="Approve" onClick={() => handleApprove(approval.id, approval.inviterId, approval.inviterPermissions, approval.approverId)}/>
+                        <Button content="Reject"  onClick={() => handleReject(approval.id, approval.inviterId, approval.inviterPermissions, approval.approverId)} />
+                    </Flex>
+                </Card.Footer>
+            </Card>
+        );
+    }
 
     return (
         <Fragment> 
@@ -88,31 +136,62 @@ export function ApprovalsView(props) {
                     <Input icon={<SearchIcon />} placeholder="Search for members" />
                 </Flex>
                 
-                <Grid columns={3}>
+                <Accordion defaultActiveIndex={[0]} panels={
+                    [{
+                        title: {
+                            content: (
+                                <span>
+                                    <Text weight="bold" disabled={pendingApprovals.length === 0 ? true : false} content="Pending Approvals " />
+                                    <Text disabled={pendingApprovals.length === 0 ? true : false} content={`(${pendingApprovals.length})`} />
+                                </span>
+                            ),
+                            disabled: pendingApprovals.length === 0 ? true : false
+                        },
+                        content: (<Grid columns={3}>
+                            {
+                                pendingApprovals.map(approval => {
+                                    return ApprovalCard(approval)
+                                })
+                            }
+                        </Grid>)
+                    },
                     {
-                        approvals.map(approval => {
-                            return (
-                                <Card fluid id={`approval_${approval.id}`}>
-                                    <Card.Header>
-                                        <Flex gap="gap.small">
-                                            <Avatar square name={approval.team} />
-                                            <Flex column>
-                                                <Text content={approval.email} weight="bold" />
-                                                <Text content={approval.team} weight="bold" />
-                                            </Flex>
-                                        </Flex>
-                                    </Card.Header>
-                                    <Card.Footer>
-                                        <Flex space="around">
-                                            <Button content="Accept" onClick={updateApprovalStatusApproved}/>
-                                            <Button content="Reject"  onClick={updateApprovalStatusDennied} />
-                                        </Flex>
-                                    </Card.Footer>
-                                </Card>
-                            );
-                        })
-                    }
-                </Grid>
+                        title: {
+                            content: (
+                                <span>
+                                    <Text weight="bold" disabled={approvedApprovals.length === 0 ? true : false} content="Approved Approvals " />
+                                    <Text disabled={approvedApprovals.length === 0 ? true : false} content={`(${approvedApprovals.length})`} />
+                                </span>
+                            ),
+                            disabled: approvedApprovals.length === 0 ? true : false
+                        },
+                        content: (<Grid columns={3}>
+                            {
+                                approvedApprovals.map(approval => {
+                                    return ApprovalCard(approval)
+                                })
+                            }
+                        </Grid>)
+                    },
+                    {
+                        title: {
+                            content: (
+                                <span>
+                                    <Text weight="bold" disabled={rejectedApprovals.length === 0 ? true : false} content="Rejected Approvals " />
+                                    <Text disabled={rejectedApprovals.length === 0 ? true : false} content={`(${rejectedApprovals.length})`} />
+                                </span>
+                            ),
+                            disabled: rejectedApprovals.length === 0 ? true : false
+                        },
+                        content: (<Grid columns={3}>
+                            {
+                                rejectedApprovals.map(approval => {
+                                    return ApprovalCard(approval)
+                                })
+                            }
+                        </Grid>)
+                    }]
+                } />
             </Flex>
         </Fragment>
     );

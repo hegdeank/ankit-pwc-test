@@ -4,16 +4,16 @@ const log = debug("msteams");
 
 const mysql = require("mysql");
 
-const dbHost = process.env.DB_HOST as string;
-const dbUser = process.env.DB_USER as string;
-const dbPass = process.env.DB_PASS as string;
-const dbName = process.env.DB_NAME as string;
+// const dbHost = process.env.DB_HOST as string;
+// const dbUser = process.env.DB_USER as string;
+// const dbPass = process.env.DB_PASS as string;
+// const dbName = process.env.DB_NAME as string;
 
 const conn = mysql.createPool({
-    host: dbHost,
-    user: dbUser,
-    password: dbPass,
-    database: dbName
+    host: process.env.DB_HOST as string,
+    user: process.env.DB_USER as string,
+    password: process.env.DB_PASS as string,
+    database: process.env.DB_NAME as string
 });
 
 export const getApprovers = async (req, res) => {
@@ -23,7 +23,6 @@ export const getApprovers = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -38,7 +37,6 @@ export const getApproverByDomain = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -53,7 +51,6 @@ export const getApproverByEmail = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -68,7 +65,6 @@ export const addApprover = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -95,12 +91,36 @@ export const getUserByEmail = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
     );
 };
+
+export const updateUserPermissions = async (req, res) => {
+    log(req.body);
+
+    //since a user can be in multiple team channels
+   conn.query(
+       "UPDATE table_users SET permission=? WHERE id=?",
+       [req.body.permission, req.query.id],
+       function (err, results) {
+           if (err) {
+               res.statusMessage = "Failed to update approval.";
+               res.status(400);
+               res.end();
+               throw err;
+           }
+           
+           const ret = JSON.stringify(results);
+           const json = JSON.parse(ret);
+           log(ret);
+           res.setHeader("Content-Type", "application/json");
+           res.status(200).send({ data: json });
+       }
+   );
+};
+
 
 //3. If they do not have access - display message alerting them a request was made. Use statement below to create request(sendEmailApproverRequest). Clear all data********* (Use below) Alert approver of request
 //3. Note that for approval_status
@@ -109,8 +129,6 @@ export const getUserByEmail = async (req, res) => {
     //2 = accepted
 
 export const addApproval = async (req, res) => {
-    log(req.body);
-    log("hello?");
     conn.query(
         "INSERT INTO table_approvals (approver_id, user_id, teams_channel, approval_status) VALUES (?,?,?,?)",
         [req.body.app_id, req.body.use_id, req.body.channel,1],
@@ -118,7 +136,6 @@ export const addApproval = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -139,23 +156,24 @@ export const addApproval = async (req, res) => {
 
 
 
-//Creating SQL statement for joining 3 tables and getting the specific users approvals - this is for the approver
-//Select table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status 
-//FROM dbpwc.table_approvals 
-//INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id
-//INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id
-//WHERE table_approver.email = ?;
-
+/**
+ * Creating SQL statement for joining 3 tables and getting the specific users approvals - this is for the approver
+ * SELECT a.id, a.teams_channel as team, a.approval_status as status, b.email as approverEmail, b.domain as domain, b.company as company, b.id as approverId, c.email as inviterEmail, c.firstname as userFirst, c.lastname as userLast, c.permission as inviterPermissions
+ * FROM dbpwc.table_approvals AS a
+ * INNER JOIN dbpwc.table_approver AS b ON dbpwc.a.approver_id = dbpwc.b.id
+ * INNER JOIN dbpwc.table_users AS c ON dbpwc.a.user_id = dbpwc.c.id
+ * WHERE b.email = ?;
+ */
 
 export const getApproverApprovals = async (req, res) => {
     conn.query(
-        "SELECT table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status FROM dbpwc.table_approvals INNER JOIN dbpwc.table_approver ON dbpwc.table_approvals.approver_id=dbpwc.table_approver.id INNER JOIN dbpwc.table_users ON dbpwc.table_approvals.user_id=dbpwc.table_users.id WHERE table_approver.email = ?;",
-        [req.params.email],
+        "SELECT a.id, a.teams_channel as team, a.approval_status as status, b.email as approverEmail, b.domain as domain, b.company as company, b.id as approverId, c.id as inviterId, c.email as inviterEmail, c.firstname as inviterFirst, c.lastname as inviterLast, c.permission as inviterPermissions FROM dbpwc.table_approvals AS a INNER JOIN dbpwc.table_approver AS b ON dbpwc.a.approver_id = dbpwc.b.id INNER JOIN dbpwc.table_users AS c ON dbpwc.a.user_id = dbpwc.c.id WHERE b.email = ? AND a.approval_status = ?;",
+        [req.query.email, req.query.status],
         function (err, results) {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
+            log(json);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -193,7 +211,6 @@ export const getUserApprovals = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -209,7 +226,6 @@ export const getUserID = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -221,27 +237,20 @@ export const getUserID = async (req, res) => {
 //Update the approval_status by userId
 // 0->deny; 1->pending; 2->yes;
 export const updateApprovalStatus = async (req, res) => {
-    var user_id=getUserID(req,res);   //get userid from table_users table
-    var status = 1;                   //approval_status=1 -->pending/default
-    if (req.params.status=="Accept"){    //approval_status=0 --> deny
-        status=0;
-    }
-    if (req.param.status=="Reject"){   //approval_status=2 -->approved
-         status=2;
-     }
-
-     //log infos for debugging
-     log("Controller check"); //check in controller class
-     log(status);
-     log(user_id);
-     log(req.params.team);
+     log(req.body);
 
      //since a user can be in multiple team channels
     conn.query(
-         "UPDATE table_approvals SET approval_status=? where user_id=? and teams_channel=?",
-         [status,user_id,req.params.team],
+        "UPDATE table_approvals SET approval_status=? WHERE id=?",
+        [req.body.status, req.query.id],
         function (err, results) {
-            if (err) throw err;
+            if (err) {
+                res.statusMessage = "Failed to update approval.";
+                res.status(400);
+                res.end();
+                throw err;
+            }
+            
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
             log(ret);
