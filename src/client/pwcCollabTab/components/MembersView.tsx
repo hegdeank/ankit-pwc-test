@@ -8,11 +8,13 @@ import {
 import { MoreIcon, ParticipantAddIcon, SearchIcon } from "@fluentui/react-icons-northstar";
 import {
     getUser, getTeamMembers,
-    deleteUser, removeTeamMember
+    deleteUser, removeTeamMember,getCurrentUser
 } from "../services/GraphService";
 import { InvalidTokenError } from "jwt-decode";
 
 import { InviteDialog } from "./InviteDialog";
+
+import {  getUserByEmail, getApproverByEmail } from "../services/PwCService";
 
 export function MembersView(props) {
     const [{ theme, context }] = useTeams();
@@ -21,6 +23,8 @@ export function MembersView(props) {
     const [pendingRows, setPendingRows] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
     const [activePanels, setActivePanels] = useState<number[]>([]);
+    const [memberType, setMemberStatus] = useState<number>();
+    //const [approverType, setApproverStatus] = useState<number[]>([]);
     const token = props.token;
     const teamId = props.teamId;
     
@@ -65,7 +69,13 @@ export function MembersView(props) {
                 roles: user.roles
             });
         });
-
+        const userData = await getCurrentUser(token)
+        const userEmail = userData.mail; // email needed to get user specific data from db
+        
+        const userKey = await getUserByEmail(userEmail);
+        const userParams = userKey.data.length; // data from query that holds: id, firstname, lastname, email, permission
+        console.log("User Status, If 1 then internal, if 0 then external: "+ userParams);
+        setMemberStatus(userParams);
         setTeamMembers(teamMemberResponse);
     }, [token]);
 
@@ -135,6 +145,7 @@ export function MembersView(props) {
                         // content: <Button tabIndex={-1} icon={<MoreIcon />} circular text iconOnly title="More options" />,
                         content: <Dialog
                             cancelButton="Cancel"
+                            
                             content={
                                 <Flex gap="gap.medium" hAlign="center" space="around">
                                     <Button content="Remove from Team" onClick={() => handleTeamMemberRemove(teamMember.id)}/>
@@ -148,7 +159,7 @@ export function MembersView(props) {
                                 </Flex>
                             }
                             header="Remove Member"
-                            trigger={<Button tabIndex={-1} icon={<MoreIcon />} circular text iconOnly title="More options" />}
+                            trigger={<Button disabled={memberType === 0 ? true : false} tabIndex={-1} icon={<MoreIcon />} circular text iconOnly title="More options" />}
                         />,
                         truncateContent: true
                     }
@@ -208,7 +219,9 @@ export function MembersView(props) {
             <Flex column fill={true} gap="gap.large">
                 <Flex space="between">
                     <Input icon={<SearchIcon />} placeholder="Search for members" />
-                    <InviteDialog token={token} teamId={teamId} teamName={props.teamName}/> 
+                    {memberType === 1 && (
+                        <InviteDialog token={token} teamId={teamId} teamName={props.teamName}/>
+                        )}
                 </Flex>
                 
                 <Accordion activeIndex={activePanels} panels={
