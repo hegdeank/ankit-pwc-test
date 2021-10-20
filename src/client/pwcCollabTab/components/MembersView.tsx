@@ -145,6 +145,7 @@ export function MembersView(props) {
                         // content: <Button tabIndex={-1} icon={<MoreIcon />} circular text iconOnly title="More options" />,
                         content: <Dialog
                             cancelButton="Cancel"
+                            
                             content={
                                 <Flex gap="gap.medium" hAlign="center" space="around">
                                     <Button content="Remove from Team" onClick={() => handleTeamMemberRemove(teamMember.id)}/>
@@ -158,7 +159,7 @@ export function MembersView(props) {
                                 </Flex>
                             }
                             header="Remove Member"
-                            trigger={<Button tabIndex={-1} icon={<MoreIcon />} circular text iconOnly title="More options" />}
+                            trigger={<Button disabled={memberType === 0 ? true : false} tabIndex={-1} icon={<MoreIcon />} circular text iconOnly title="More options" />}
                         />,
                         truncateContent: true
                     }
