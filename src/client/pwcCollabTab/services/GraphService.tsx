@@ -92,7 +92,7 @@ export async function addTeamMember(token, teamId, userId): Promise<any> {
 }
 
 export async function getTeamMembers(token, teamId): Promise<any> {
-    const endpoint = `${betaUrl}teams/${teamId}/members`;
+    const endpoint = `${baseUrl}teams/${teamId}/members`;
 
     const requestObject = {
         method: "GET",
@@ -165,7 +165,7 @@ export async function getCurrentUser(token) {
 
 //create a catalog and return the id of the catalog
 export async function getCatalogID(token){
-    const endpoint = `${baseUrl}identityGovernance/entitlementManagement/accessPackageCatalogs?$filter=(displayName eq 'General')`;
+    const endpoint = `${betaUrl}identityGovernance/entitlementManagement/accessPackageCatalogs?$filter=(displayName eq 'General')`;
     const requestObject = {
         method: "GET",
         headers: {
