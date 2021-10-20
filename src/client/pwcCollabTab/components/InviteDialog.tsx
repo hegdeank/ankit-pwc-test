@@ -6,7 +6,7 @@ import {
 } from "@fluentui/react-northstar";
 import { CloseIcon, ParticipantAddIcon } from "@fluentui/react-icons-northstar";
 import { invite, addTeamMember, sendEmail, getCurrentUser } from "../services/GraphService";
-import { getApproverByDomain, getUserByEmail, getApprovers, addApproval } from "../services/PwCService";
+import { getApproverByDomain, getUserByEmail, getApprovers, addApproval, getUserApprovalsById } from "../services/PwCService";
 
 export function InviteDialog(props) {
     const [guestsInput, setGuestsInput] = useState<string>("");
@@ -60,16 +60,33 @@ export function InviteDialog(props) {
                         if (approverData) {
                             console.log(`Approver found: ${approverData.email}`);
                             // Check if user is permitted to add guests from domain
-                            if (userParams.permission.includes(approverData.id)) {
-                                addGuest.add(guest);
-                                approvedDomains.add(domain);
-                                // keep below
-                                approversValid.add({
-                                    email: approverData.email,
-                                    company: approverData.company,
-                                    name: `${approverData.firstname} ${approverData.lastname}`
-                                });
+
+                            const userApprovals = await getUserApprovalsById(approverData.id,userParams.id); // check if the approval is already made
+                            //console.log("Look here: " + userApprovals.data[0].teams_channel);
+                            console.log("Look here: " + userApprovals.data.length);
+
+
+                            if (userApprovals.data.length > 0) {
+                                if (userParams.permission.includes(approverData.id) && userApprovals.data[0].approval_status == 2) {
+                                    addGuest.add(guest);
+                                    approvedDomains.add(domain);
+                                    // keep below
+                                    approversValid.add({
+                                        email: approverData.email,
+                                        company: approverData.company,
+                                        name: `${approverData.firstname} ${approverData.lastname}`
+                                    });
+                                }else if(userApprovals.data[0].approval_status == 1){
+                                    error.push(`You are not approved to invite users for domain: ${domain}. Your approval is still pending.`);
+                                    console.log(`You are not approved for domain: ${domain}`);
+                                    rejectGuest += `${guest}, `;
+                                }else if(userApprovals.data[0].approval_status == 0){
+                                    error.push(`You are not approved to invite users for domain: ${domain}. Your approval was denied.`);
+                                    console.log(`You are not approved for domain: ${domain}`);
+                                    rejectGuest += `${guest}, `;
+                                }
                             } else {
+
                                 // notify that approval was made AND MAKE SURE WE DONT ADD ANOTHER: create get approver by id
                                 error.push(`You are not approved to invite users for domain: ${domain}. An approval has been made for you.`);
                                 console.log(`You are not approved for domain: ${domain}`);

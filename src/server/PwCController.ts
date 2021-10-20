@@ -217,6 +217,23 @@ export const getUserApprovals = async (req, res) => {
     );
 };
 
+
+
+export const getUserApprovalsById = async (req, res) => {
+    conn.query(
+        "SELECT * FROM dbpwc.table_approvals WHERE table_approvals.approver_id = ? AND table_approvals.user_id = ?;",
+        [req.query.approver_id, req.query.user_id],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};
+
+
 //Get the UserID by email for updating the approval_status
 export const getUserID = async (req, res) => {
     conn.query(

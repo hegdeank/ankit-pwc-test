@@ -8,7 +8,7 @@ import * as compression from "compression";
 import { 
     getApproverByDomain, getApprovers, getApproverByEmail,
     addApprover, getUserByEmail, addApproval, getApproverApprovals,
-    getUserApprovals, updateApprovalStatus, updateUserPermissions
+    getUserApprovals, updateApprovalStatus, updateUserPermissions, getUserApprovalsById
 } from "./PwCController";
 
 import jwtDecode from "jwt-decode";
@@ -56,6 +56,8 @@ express.get("/getApproverApprovals", getApproverApprovals);
 express.get("/getUserApprovals/:email", getUserApprovals);
 
 express.put("/updateApprovalStatus", updateApprovalStatus);
+
+express.get("/getUserApprovalsById", getUserApprovalsById);
 
 // Inject the raw request body onto the request object
 express.use(Express.json({

@@ -146,6 +146,24 @@ export async function getUserApprovals(email) {
     }
 }
 
+
+export async function getUserApprovalsById(approver_id, user_id) {
+    let endpoint = `/getUserApprovalsById?approver_id=${approver_id}&user_id=${user_id}`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
+
+
 //SudoCode Test
 export async function updateApprovalStatus(id, status) {
     let endpoint = `/updateApprovalStatus?id=${id}`;
