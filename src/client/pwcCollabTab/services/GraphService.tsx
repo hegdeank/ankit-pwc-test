@@ -517,6 +517,11 @@ export async function requestAccess(token, accessPackageID,userID,policyID): Pro
         var  json= JSON.stringify(raw_data);
         var data = JSON.parse(json);
         var requestStatusID=data.id;
+        var requestState=data.requestState;  //Submitted
+        var requestStatus=data.requestStatus; //Approved
+        if (requestState != "Submitted" || requestStatus!="Approved"){   //checking error during giving permission to user
+            return "Error Occurs during requesting";
+        }
         console.log(data.id);
         return requestStatusID;  // this id will use it later for tracking the status of request
         
