@@ -306,7 +306,7 @@ Contact the sending party for more information if needed.`
                     </Flex>
                 </Flex> 
             }
-            trigger={<Button icon={<ParticipantAddIcon />} content="Add Member" primary />}
+            trigger={<Button icon={<ParticipantAddIcon />} content="Add Member" iconPosition="after" primary />}
         />
     );
 }

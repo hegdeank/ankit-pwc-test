@@ -31,7 +31,7 @@ npm install @types/microsoft-graph --save-dev
 
 ```
 
-Install database dependecys using 
+Install database dependecies using 
 ```bash
 npm install mysql
 ```

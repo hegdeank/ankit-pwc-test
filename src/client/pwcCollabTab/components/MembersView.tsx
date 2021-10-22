@@ -16,9 +16,16 @@ import { InviteDialog } from "./InviteDialog";
 
 import {  getUserByEmail, getApproverByEmail } from "../services/PwCService";
 
+import OwnerCard from "./ui_components/OwnerCard";
+import PendingMemberCard from "./ui_components/PendingMemberCard";
+import MemberCard from "./ui_components/MemberCard";
+
 export function MembersView(props) {
     const [{ theme, context }] = useTeams();
     const [ownerRows, setOwnerRows] = useState<any[]>([]);
+    const [ownerUsers, setOwnerUsers] = useState<any[]>([]);
+    const [memberUsers, setMemberUsers] = useState<any[]>([]);
+    const [pendingUsers, setPendingUsers] = useState<any[]>([]);
     const [memberRows, setMemberRows] = useState<any[]>([]);
     const [pendingRows, setPendingRows] = useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
@@ -50,6 +57,10 @@ export function MembersView(props) {
             {
                 content: "Date Added",
                 key: "created"
+            },
+            {
+                content: "Role",
+                key: "role"
             },
             {
                 key: "more options",
@@ -98,6 +109,12 @@ export function MembersView(props) {
         const memberUserRows: any[] = [];
         const pendingUserRows: any[] = [];
 
+        // Users lists for Member Cards 
+        const ownerUsers: any[] = []; // Owners of the team
+        const memberUsers: any[] = []; // Non-Guest Members of the Team
+        const guestUsers: any[] = []; // Guest Members of the Team
+        const pendingUsers: any[] = []; // Users who have not accepte invite to team yet
+
         for (const teamMember of teamMembers) {
             const user = await getUser(
                 token,
@@ -141,6 +158,10 @@ export function MembersView(props) {
                         key: `createdDateTime-${user.id}`
                     },
                     {
+                        content: user.role,
+                        key: `role-${user.id}`
+                    },
+                    {
                         key: `more-${user.id}`,
                         // content: <Button tabIndex={-1} icon={<MoreIcon />} circular text iconOnly title="More options" />,
                         content: <Dialog
@@ -168,15 +189,65 @@ export function MembersView(props) {
 
             if (teamMember.roles.includes("owner")) {
                 ownerUserRows.push(row);
+                // Add Owners to ownerUsers here
+                ownerUsers.push(
+                    <OwnerCard 
+                        userImage = 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/CarlosSlattery.jpg'
+                        userName = {user.displayName}
+                        userType = {user.userType}
+                        //userStatus = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                        userStatus = {formatStatus}
+                        dateAdded = {createdDate}
+                        userRole = {teamMember.roles}
+                        userDelete={true}
+                        shouldDelete=""
+
+                    />)
             } else if (user.externalUserState === "PendingAcceptance") {
                 pendingUserRows.push(row);
+                // Add Pending Users to pendingUsers here
+                pendingUsers.push(
+                    <PendingMemberCard 
+                        userImage = 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/CarlosSlattery.jpg'
+                        userName = {user.displayName}
+                        userType = {user.userType}
+                        //userStatus = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                        userStatus = {formatStatus}
+                        dateAdded = {createdDate}
+                        userRole = {teamMember.roles}
+                        userDelete={true}
+                        shouldDelete=""
+
+                    />)
             } else {
+                if (teamMember.roles.includes("guest")){
+                    // Add user to guestUsers here
+                }
+                else if (teamMember.roles.includes("member")){
+                    // Add user to memberUsers here
+                }
+                memberUsers.push(
+                    <MemberCard 
+                        userImage = 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/CarlosSlattery.jpg'
+                        userName = {user.displayName}
+                        userType = {user.userType}
+                        //userStatus = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                        userStatus = {formatStatus}
+                        dateAdded = {createdDate}
+                        userRole = {teamMember.roles}
+                        userDelete={true}
+                        shouldDelete=""
+
+                    />)
                 memberUserRows.push(row);
             }
         }
         setOwnerRows(ownerUserRows);
         setMemberRows(memberUserRows);
         setPendingRows(pendingUserRows);
+        setOwnerUsers(ownerUsers);
+        setMemberUsers(memberUsers);
+        setPendingUsers(pendingUsers);
     }, [teamMembers]);
 
     useEffect(() => {
@@ -238,16 +309,19 @@ export function MembersView(props) {
                                 onClick: () => handlePanelClick(0)
                             },
                             content:(
-                                <Table
-                                    variables={{
-                                        cellContentOverflow: "none"
-                                    }}
-                                    header={header}
-                                    rows={ownerRows}
-                                    styles={{
-                                        width: "100%"
-                                    }}
-                                />
+                                // Add Card Content here for Owner Cards
+                                <Flex column gap="gap.smaller">
+                                    <Flex gap="gap.smaller" space="between">
+                                        <Text content="Name" />
+                                        <Text content="User Type" />
+                                        <Text content="Status" />
+                                        <Text content="Date Added" />
+                                        <Text content="Role" />
+                                        <Text content="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" />
+                                    </Flex>
+
+                                    {ownerUsers}
+                                </Flex>
                             )
                         },
                         {
@@ -262,16 +336,19 @@ export function MembersView(props) {
                                 onClick: () => handlePanelClick(1)
                             },
                             content: (
-                                <Table
-                                    variables={{
-                                        cellContentOverflow: "none"
-                                    }}
-                                    header={header}
-                                    rows={memberRows}
-                                    styles={{
-                                        width: "100%"
-                                    }}
-                                />
+                                // Add Card Content here for Member Cards
+                                <Flex column gap="gap.smaller">
+                                    <Flex gap="gap.smaller" space="between">
+                                        <Text content="Name" />
+                                        <Text content="User Type" />
+                                        <Text content="Status" />
+                                        <Text content="Date Added" />
+                                        <Text content="Role" />
+                                        <Text content="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" />
+                                    </Flex>
+
+                                    {memberUsers}
+                                </Flex>
                             )
                         },
                         {
@@ -286,16 +363,19 @@ export function MembersView(props) {
                                 onClick: () => handlePanelClick(2)
                             },
                             content: (
-                                <Table
-                                    variables={{
-                                        cellContentOverflow: "none"
-                                    }}
-                                    header={header}
-                                    rows={pendingRows}
-                                    styles={{
-                                        width: "100%"
-                                    }}
-                                />
+                                // Add Card Content here for Pending Member Cards
+                                <Flex column gap="gap.smaller">
+                                    <Flex gap="gap.smaller" space="between">
+                                        <Text content="Name" />
+                                        <Text content="User Type" />
+                                        <Text content="Status" />
+                                        <Text content="Date Added" />
+                                        <Text content="Role" />
+                                        <Text content="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" />
+                                    </Flex>
+
+                                    {pendingUsers}
+                                </Flex>
                             )
                         }
                     ]
