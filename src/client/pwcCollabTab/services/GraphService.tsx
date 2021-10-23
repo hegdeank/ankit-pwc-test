@@ -19,6 +19,55 @@ export async function getUsers(token, select) {
     return;
 }
 
+export async function getUserPhoto(token, userID) {
+    const endpoint = `${baseUrl}users/${userID}/photo/$value`;
+    //const endpoint = `https://graph.microsoft.com/v1.0/users/b89c308f-a5ea-475c-a6f4-ee58e918a202/photo/$value`
+    const requestObject = {
+        method: "GET",
+        headers: {
+            authorization: `bearer ${token}`,
+            "content-type": "image/jpeg"
+        }
+    };
+
+    let burl = 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/CameronEvans.jpg';
+    
+    return await fetch(endpoint, requestObject)
+    .then( function (response) {
+        if (response.ok) {
+            return response.blob();
+        }
+    })
+    .then(
+        function (photoBlob) {
+            if (photoBlob) {
+                return URL.createObjectURL(photoBlob);
+            } else {
+                return "";
+            }
+        }
+    );
+    
+}
+
+export async function getUserPresence(token, userId) {
+    const endpoint = `${baseUrl}users/${userId}/presence`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            authorization: `bearer ${token}`,
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+    return;
+}
+
 export async function getUser(token, userId, select) {
     const endpoint = `${baseUrl}users/${userId}?$select=${select}`;
     const requestObject = {

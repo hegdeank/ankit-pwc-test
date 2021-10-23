@@ -7,8 +7,8 @@ export function NavMenu(props) {
 
     const steps = ["members", "approvals"];
     const stepNames: { [key: string]: string } = {
-        members: "View Members",
-        approvals: "Approvals"
+        members: "View Guests",
+        approvals: "View Requests"
     };
 
     const menuItems = steps.map(step => {

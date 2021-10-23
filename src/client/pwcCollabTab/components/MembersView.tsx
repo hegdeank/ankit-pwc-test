@@ -3,12 +3,12 @@ import { Fragment, useEffect, useState, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
 import {
     Accordion, Avatar, Button, Dialog, Status, Table, Input,
-    Header, Flex, Loader, Text
+    Header, Flex, Loader, Text, Grid
 } from "@fluentui/react-northstar";
 import { MoreIcon, ParticipantAddIcon, SearchIcon } from "@fluentui/react-icons-northstar";
 import {
     getUser, getTeamMembers,
-    deleteUser, removeTeamMember,getCurrentUser
+    deleteUser, removeTeamMember,getCurrentUser, getUserPresence, getUserPhoto
 } from "../services/GraphService";
 import { InvalidTokenError } from "jwt-decode";
 
@@ -35,6 +35,8 @@ export function MembersView(props) {
     const token = props.token;
     const teamId = props.teamId;
     
+    
+
     const header = {
         key: "header",
         items: [
@@ -121,6 +123,16 @@ export function MembersView(props) {
                 teamMember.userId,
                 "companyName,createdDateTime,displayName,externalUserState,id,mail,userType"
             );
+            
+            const indivUserPresence = await getUserPresence(
+                token,
+                teamMember.userId
+            );
+
+            const indivUserPhoto = await getUserPhoto(
+                token,
+                teamMember.userId
+            );
 
             let splitDate = user.createdDateTime.split("-");
             const createdDate = `${splitDate[1]}/${splitDate[2].split("T")[0]}/${splitDate[0]}`;
@@ -192,23 +204,22 @@ export function MembersView(props) {
                 // Add Owners to ownerUsers here
                 ownerUsers.push(
                     <OwnerCard 
-                        userImage = 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/CarlosSlattery.jpg'
+                        userImage = {indivUserPhoto}
                         userName = {user.displayName}
                         userType = {user.userType}
                         //userStatus = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
                         userStatus = {formatStatus}
                         dateAdded = {createdDate}
                         userRole = {teamMember.roles}
-                        userDelete={true}
-                        shouldDelete=""
-
+                        userEmail = {user.mail}
+                        userPresence = {indivUserPresence.activity}
                     />)
             } else if (user.externalUserState === "PendingAcceptance") {
                 pendingUserRows.push(row);
                 // Add Pending Users to pendingUsers here
                 pendingUsers.push(
                     <PendingMemberCard 
-                        userImage = 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/CarlosSlattery.jpg'
+                        userImage = {indivUserPhoto}
                         userName = {user.displayName}
                         userType = {user.userType}
                         //userStatus = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
@@ -217,29 +228,47 @@ export function MembersView(props) {
                         userRole = {teamMember.roles}
                         userDelete={true}
                         shouldDelete=""
-
+                        userEmail = {user.mail}
+                        userPresence = {indivUserPresence.activity}
                     />)
             } else {
                 if (teamMember.roles.includes("guest")){
-                    // Add user to guestUsers here
+                    // Add user to memberUsers with guest role here
+                    memberUsers.push(
+                        <MemberCard 
+                            userImage = {indivUserPhoto}
+                            userName = {user.displayName}
+                            userType = {user.userType}
+                            //userStatus = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                            userStatus = {formatStatus}
+                            dateAdded = {createdDate}
+                            userRole = {teamMember.roles}
+                            userDelete={true}
+                            shouldDelete=""
+                            userEmail = {user.mail}
+                            userPresence = {indivUserPresence.activity}
+                        />)
+                    memberUserRows.push(row);
                 }
-                else if (teamMember.roles.includes("member")){
+                else{
                     // Add user to memberUsers here
+                    memberUsers.push(
+                        <MemberCard 
+                            userImage = {indivUserPhoto}
+                            userName = {user.displayName}
+                            userType = {user.userType}
+                            //userStatus = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                            userStatus = {formatStatus}
+                            dateAdded = {createdDate}
+                            userRole = "Member"
+                            userDelete={false}
+                            shouldDelete=""
+                            userEmail = {user.mail}
+                            userPresence = {indivUserPresence.activity}
+                        />)
+                    memberUserRows.push(row);
                 }
-                memberUsers.push(
-                    <MemberCard 
-                        userImage = 'https://fabricweb.azureedge.net/fabric-website/assets/images/avatar/CarlosSlattery.jpg'
-                        userName = {user.displayName}
-                        userType = {user.userType}
-                        //userStatus = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
-                        userStatus = {formatStatus}
-                        dateAdded = {createdDate}
-                        userRole = {teamMember.roles}
-                        userDelete={true}
-                        shouldDelete=""
-
-                    />)
-                memberUserRows.push(row);
+                
             }
         }
         setOwnerRows(ownerUserRows);
@@ -311,15 +340,14 @@ export function MembersView(props) {
                             content:(
                                 // Add Card Content here for Owner Cards
                                 <Flex column gap="gap.smaller">
-                                    <Flex gap="gap.smaller" space="between">
+                                    <Grid columns='6' style={{columnGap:'32px'}}>
                                         <Text content="Name" />
                                         <Text content="User Type" />
                                         <Text content="Status" />
                                         <Text content="Date Added" />
                                         <Text content="Role" />
-                                        <Text content="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" />
-                                    </Flex>
-
+                                        <Text content="" />
+                                    </Grid>
                                     {ownerUsers}
                                 </Flex>
                             )
@@ -338,15 +366,14 @@ export function MembersView(props) {
                             content: (
                                 // Add Card Content here for Member Cards
                                 <Flex column gap="gap.smaller">
-                                    <Flex gap="gap.smaller" space="between">
+                                    <Grid columns='6' style={{columnGap:'32px'}}>
                                         <Text content="Name" />
                                         <Text content="User Type" />
                                         <Text content="Status" />
                                         <Text content="Date Added" />
                                         <Text content="Role" />
-                                        <Text content="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" />
-                                    </Flex>
-
+                                        <Text content="" />
+                                    </Grid>
                                     {memberUsers}
                                 </Flex>
                             )
@@ -365,15 +392,14 @@ export function MembersView(props) {
                             content: (
                                 // Add Card Content here for Pending Member Cards
                                 <Flex column gap="gap.smaller">
-                                    <Flex gap="gap.smaller" space="between">
+                                    <Grid columns='6' style={{columnGap:'32px'}}>
                                         <Text content="Name" />
                                         <Text content="User Type" />
                                         <Text content="Status" />
                                         <Text content="Date Added" />
                                         <Text content="Role" />
-                                        <Text content="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" />
-                                    </Flex>
-
+                                        <Text content="" />
+                                    </Grid>
                                     {pendingUsers}
                                 </Flex>
                             )
