@@ -2,7 +2,7 @@ import * as React from "react";
 import { Fragment, useEffect, useState } from "react";
 import {
     Button, Flex, Input, Form, FormField, Divider, Dialog,
-    Text, Pill, PillGroup, TextArea
+    Text, Pill, PillGroup, TextArea, List, Checkbox
 } from "@fluentui/react-northstar";
 import { CloseIcon, ParticipantAddIcon } from "@fluentui/react-icons-northstar";
 import { invite, addTeamMember, sendEmail, getCurrentUser } from "../services/GraphService";
@@ -17,6 +17,7 @@ export function InviteDialog(props) {
     const [loading, setLoading] = useState<boolean>(false);
     const [approversNotify, setApproversNotify] = useState<any[]>([]);
     const [approversRequest, setApproversRequest] = useState<any[]>([]);
+    const [approvalsCreate, setApprovalsCreate] = useState<any[]>([]);
     const [open, setOpen] = useState<boolean>(false);
     const token = props.token;
     const teamId = props.teamId;
@@ -38,6 +39,7 @@ export function InviteDialog(props) {
         const guestSplit = guestsInput.split(",");
         const addGuest: Set<string> = new Set();
         const approversValid: Set<any> = new Set();
+        const approversInvalid: any[] = [];
         const approvedDomains: Set<string> = new Set();
         let rejectGuest: string = "";
         const error: string[] = [];
@@ -58,13 +60,7 @@ export function InviteDialog(props) {
                         const approverData = approver.data[0]; // get that data: id, firstname, lastname, email, company, domain
 
                         if (approverData) {
-                            console.log(`Approver found: ${approverData.email}`);
-                            // Check if user is permitted to add guests from domain
-
                             const userApprovals = await getUserApprovalsById(approverData.id,userParams.id); // check if the approval is already made
-                            //console.log("Look here: " + userApprovals.data[0].teams_channel);
-                            console.log("Look here: " + userApprovals.data.length);
-
 
                             if (userApprovals.data.length > 0) {
                                 if (userParams.permission.includes(approverData.id) && userApprovals.data[0].approval_status == 2) {
@@ -78,24 +74,30 @@ export function InviteDialog(props) {
                                     });
                                 }else if(userApprovals.data[0].approval_status == 1){
                                     error.push(`You are not approved to invite users for domain: ${domain}. Your approval is still pending.`);
-                                    console.log(`You are not approved for domain: ${domain}`);
                                     rejectGuest += `${guest}, `;
                                 }else if(userApprovals.data[0].approval_status == 0){
                                     error.push(`You are not approved to invite users for domain: ${domain}. Your approval was denied.`);
-                                    console.log(`You are not approved for domain: ${domain}`);
                                     rejectGuest += `${guest}, `;
                                 }
                             } else {
 
                                 // notify that approval was made AND MAKE SURE WE DONT ADD ANOTHER: create get approver by id
-                                error.push(`You are not approved to invite users for domain: ${domain}. An approval has been made for you.`);
-                                console.log(`You are not approved for domain: ${domain}`);
-                                rejectGuest += `${guest}, `;
-                                const createApproval = await addApproval({
-                                    app_id: approverData.id,
-                                    use_id: userParams.id,
-                                    channel: teamName
-                                });
+                                // error.push(`You are not approved to invite users for domain: ${domain}. An approval has been made for you.`);
+                                // rejectGuest += `${guest}, `;
+                                if (approversInvalid.findIndex(approval => approval.domain === domain) === -1) {
+                                    approversInvalid.push({
+                                        app_id: approverData.id,
+                                        use_id: userParams.id,
+                                        channel: teamName,
+                                        domain: domain,
+                                        selected: false
+                                    });
+                                }
+                                // const createApproval = await addApproval({
+                                //     app_id: approverData.id,
+                                //     use_id: userParams.id,
+                                //     channel: teamName
+                                // });
                                 // keep below
                                 // approversInvalid.add({
                                 //     email: approverData.email,
@@ -128,6 +130,7 @@ export function InviteDialog(props) {
         setGuests([...guests, ...Array.from(addGuest.values())]);
         setApproversNotify([...approversNotify, ...Array.from(approversValid.values())]);
         // setApproversRequest([...approversRequest, ...Array.from(approversInvalid.values())]);
+        setApprovalsCreate(Array.from(approversInvalid.values()));
         setGuestsInput(rejectGuest.slice(0, -2));
     }
 
@@ -241,6 +244,53 @@ Contact the sending party for more information if needed.`
         await sendEmail(token, sendMail);
     }
     
+    const handleApprovalSelect = (domain) => {
+        let approvals = [...approvalsCreate];
+        let index =  approvals.findIndex(approval => approval.domain === domain);
+        if (approvals[index].selected) {
+            approvals[index].selected = false;
+        } else {
+            approvals[index].selected = true;
+        }
+        console.log(approvals[index]);
+        setApprovalsCreate(approvals);
+    }
+    
+    const handleApprovalSubmit = () => {
+        const approvals = approvalsCreate.filter(approval => approval.selected);
+
+        approvals.forEach(approval => addApproval({
+            app_id: approval.app_id,
+            use_id: approval.use_id,
+            channel: teamName
+        }))
+
+        setApprovalsCreate([]);
+    }
+
+    const ApprovalChecks = () => {
+        return (
+            <Flex column gap="gap.large">
+                <Text content="You were not approved to invite users from the following domains. Select domains you would like to create approvals for." />
+                <Flex column gap="gap.small">
+                    {
+                        approvalsCreate.map(approval => 
+                            <Checkbox 
+                                checked={approval.selected} 
+                                label={approval.domain} 
+                                onClick={() => handleApprovalSelect(approval.domain)}
+                            />
+                        )
+                    }
+                </Flex>
+                <Flex gap="gap.medium" hAlign="end">
+                    <Button content="Cancel" onClick={() => setApprovalsCreate([])} />    
+                    <Button content="Create Approvals" primary onClick={() => handleApprovalSubmit()} />
+                </Flex>
+            </Flex>
+        );
+    }
+
     return (
         <Dialog
             open={open}
@@ -254,56 +304,64 @@ Contact the sending party for more information if needed.`
               }}
             content={
                 <Flex column fill={true}>
-                    <Form onSubmit={handleSubmit}>
-                        <Text content="Enter emails, separated by commas, to add new members to your team." />
-                        <FormField>
-                            <Flex fill={true} gap="gap.medium">
-                            <Flex.Item>
-                                <Fragment>
-                                    {errors.length !== 0 && (
-                                        <Input fluid error value={guestsInput} placeholder='Enter guests' onChange={handleGuestInput}/>
-                                    )}
-                                    {errors.length === 0 && (
-                                        <Input fluid value={guestsInput} placeholder='Enter guests' onChange={handleGuestInput}/>
-                                    )}
-                                </Fragment>
-                            </Flex.Item>
-                            <Flex.Item size="size.quarter">
-                                <Button>Add</Button>
-                            </Flex.Item>
-                            </Flex>
-                        </FormField>
-                    </Form>
-                    { errors.map(err => <Text error content={err} />)}
-                    
-                    <PillGroup>
-                    {
-                        guests.map(guest =>
-                        <Pill
-                            actionable
-                            onDismiss={handleRemove}
-                        >
-                            {guest}
-                        </Pill>
-                        )
-                    }
-                    </PillGroup>
-
-                    <Flex column hAlign="center" gap="gap.medium">
-                    {guests.length > 0 && (
+                    { approvalsCreate.length === 0 && (
                         <Fragment>
-                        <Divider />
-                        <TextArea 
-                            resize="both" 
-                            fluid 
-                            value={inviteMessage} 
-                            placeholder='Enter a reason why you would like to collaborate with these external users.' 
-                            onChange={handleMessageInput}
-                        />
-                        <Button primary loading={loading} content={loading ? "Inviting" : "Invite Users"} onClick={triggerInvite}/>
+                            <Form onSubmit={handleSubmit}>
+                                <Text content="Enter emails, separated by commas, to add new members to your team." />
+                                <FormField>
+                                    <Flex fill={true} gap="gap.medium">
+                                    <Flex.Item>
+                                        <Fragment>
+                                            {errors.length !== 0 && (
+                                                <Input fluid error value={guestsInput} placeholder='Enter guests' onChange={handleGuestInput}/>
+                                            )}
+                                            {errors.length === 0 && (
+                                                <Input fluid value={guestsInput} placeholder='Enter guests' onChange={handleGuestInput}/>
+                                            )}
+                                        </Fragment>
+                                    </Flex.Item>
+                                    <Flex.Item size="size.quarter">
+                                        <Button>Add</Button>
+                                    </Flex.Item>
+                                    </Flex>
+                                </FormField>
+                            </Form>
+                            { errors.map(err => <Text error content={err} />)}
+                            
+                            <PillGroup>
+                            {
+                                guests.map(guest =>
+                                <Pill
+                                    actionable
+                                    onDismiss={handleRemove}
+                                >
+                                    {guest}
+                                </Pill>
+                                )
+                            }
+                            </PillGroup>
+
+                            <Flex column hAlign="center" gap="gap.medium">
+                            {guests.length > 0 && (
+                                <Fragment>
+                                <Divider />
+                                <TextArea 
+                                    resize="both" 
+                                    fluid 
+                                    value={inviteMessage} 
+                                    placeholder='Enter a reason why you would like to collaborate with these external users.' 
+                                    onChange={handleMessageInput}
+                                />
+                                <Button primary loading={loading} content={loading ? "Inviting" : "Invite Users"} onClick={triggerInvite}/>
+                                </Fragment>
+                            )}
+                            </Flex>
                         </Fragment>
                     )}
-                    </Flex>
+
+                    { approvalsCreate.length !== 0 && (
+                        <ApprovalChecks />
+                    )}
                 </Flex> 
             }
             trigger={<Button icon={<ParticipantAddIcon />} content="Add Member" iconPosition="after" primary />}
