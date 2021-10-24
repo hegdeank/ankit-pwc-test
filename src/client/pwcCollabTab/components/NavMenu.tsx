@@ -4,7 +4,8 @@ import { Menu } from "@fluentui/react-northstar";
 
 export function NavMenu(props) {
     const [selected, setSelected] = useState(props.selected);
-
+    //const steps : string[] = props.actType
+    // if above populates, then comment out the below for steps
     const steps = ["members", "approvals"];
     const stepNames: { [key: string]: string } = {
         members: "View Guests",

@@ -181,6 +181,24 @@ export const getApproverApprovals = async (req, res) => {
 };
 
 
+
+// this is for the base users
+export const getUserApprovalsByStatus = async (req, res) => {
+    conn.query(
+        "SELECT a.id, a.teams_channel as team, a.approval_status as status, b.email as approverEmail, b.domain as domain, b.company as company, b.id as approverId, c.id as inviterId, c.email as inviterEmail, c.firstname as inviterFirst, c.lastname as inviterLast, c.permission as inviterPermissions FROM dbpwc.table_approvals AS a INNER JOIN dbpwc.table_approver AS b ON dbpwc.a.approver_id = dbpwc.b.id INNER JOIN dbpwc.table_users AS c ON dbpwc.a.user_id = dbpwc.c.id WHERE c.email = ? AND a.approval_status = ?;",
+        [req.query.email, req.query.status],
+        function (err, results) {
+            if (err) throw err;
+            const ret = JSON.stringify(results);
+            const json = JSON.parse(ret);
+            log(json);
+            res.setHeader("Content-Type", "application/json");
+            res.status(200).send({ data: json });
+        }
+    );
+};
+
+
 // THis is for getting all the approval requests for a specific user that is waiting on an approver --- for a user
 
 //Select table_approvals.id, table_approver.email as ApproverEmail, table_users.email as UsersEmail, table_approvals.teams_channel, table_approvals.approval_status 

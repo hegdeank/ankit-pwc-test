@@ -4,7 +4,8 @@ import { Fragment, useState, useEffect, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
 import * as microsoftTeams from "@microsoft/teams-js";
 import jwtDecode from "jwt-decode";
-
+import {getCurrentUser} from "./services/GraphService";
+import { getUserByEmail } from "./services/PwCService";
 import { NavMenu } from "./components/NavMenu";
 import { MembersView } from "./components/MembersView";
 import { DatabaseTest } from "./components/DatabaseTest";
@@ -20,7 +21,7 @@ export const PwcCollabTab = () => {
     const [teamName, setTeamName] = useState<string>();
     const [error, setError] = useState<string>();
     const [selectedMenuItem, setSelectedMenuItem] = useState("members");
-
+    const [activeType, setActiveStatus] = useState<string[]>([]);
     const [ssoToken, setSsoToken] = useState<string>();
     const [msGraphOboToken, setMsGraphOboToken] = useState<string>();
 
@@ -70,7 +71,7 @@ export const PwcCollabTab = () => {
         const response = await fetch(`/exchangeSsoTokenForOboToken/?ssoToken=${ssoToken}`);
         const responsePayload = await response.json();
         if (response.ok) {
-        setMsGraphOboToken(responsePayload.access_token);
+            setMsGraphOboToken(responsePayload.access_token);
         } else {
         if (responsePayload!.error === "consent_required") {
             setError("consent_required");
@@ -78,6 +79,25 @@ export const PwcCollabTab = () => {
             setError("unknown SSO error");
         }
         }
+        // below is to set the permissions for who can see what - working on it
+        /**
+        const userData = await getCurrentUser(msGraphOboToken)
+        const userEmail = userData.mail; // email needed to get user specific data from db
+        
+        const userKey = await getUserByEmail(userEmail);
+        const userParams = userKey.data.length; // data from query that holds: id, firstname, lastname, email, permission
+        let panels: string[] = [];
+        console.log("User Status, If 1 then internal, if 0 then external: "+ userParams);
+        if(userParams){
+            panels.push("members");
+            panels.push("approvals");
+            
+        }else{
+            panels.push("members");
+        }
+        setActiveStatus(panels);
+        console.log(activeType)
+        */
     }, [ssoToken]);
 
     useEffect(() => {
@@ -101,17 +121,17 @@ export const PwcCollabTab = () => {
         <Provider theme={theme}>
         <Flex column gap="gap.smaller" padding="padding.medium" hAlign="center">
             {error && <div><Text content={`An SSO error occurred ${error}`} /></div>}
-            <NavMenu selected={selectedMenuItem} callback={handleMenuSelect} />
+            <NavMenu selected={selectedMenuItem} actType={activeType} callback={handleMenuSelect} />
         </Flex>
         <Flex gap="gap.large" padding="padding.medium"
             styles={{
             padding: '1rem 2rem 4rem 4rem'
             }}>
-            {selectedMenuItem === "members" && (
+            {selectedMenuItem === "members" &&(
                 <MembersView token={msGraphOboToken} teamId={teamId} teamName={teamName}/>
             )}
 
-            {selectedMenuItem === "approvals" && (
+            {selectedMenuItem === "approvals" &&(
                 <ApprovalsView token={msGraphOboToken} teamId={teamId} teamName={teamName}/>
             )}
 

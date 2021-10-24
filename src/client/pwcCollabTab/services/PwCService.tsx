@@ -130,6 +130,25 @@ export async function getApproverApprovals(email, status) {
     }
 }
 
+
+
+export async function getUserApprovalsByStatus(email, status) {
+    let endpoint = `/getUserApprovalsByStatus?email=${email}&status=${status}`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response.json();
+    }
+}
+
+
 export async function getUserApprovals(email) {
     let endpoint = `/getUserApprovals/${email}`;
     const requestObject = {

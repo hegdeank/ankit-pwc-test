@@ -5,12 +5,15 @@ import {
 } from "@fluentui/react-northstar";
 import { SearchIcon } from "@fluentui/react-icons-northstar";
 import { getCurrentUser } from "../services/GraphService";
-import { getApproverApprovals, getApproverByEmail, updateApprovalStatus, updateUserPermissions } from "../services/PwCService";
+import { getApproverApprovals, getApproverByEmail, updateApprovalStatus, updateUserPermissions, getUserApprovalsByStatus } from "../services/PwCService";
 
 export function ApprovalsView(props) {
     const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
     const [approvedApprovals, setApprovedApprovals] = useState<any[]>([]);
     const [rejectedApprovals, setRejectedApprovals] = useState<any[]>([]);
+    const [pendingUserApprovals, setUserPendingApprovals] = useState<any[]>([]);
+    const [approvedUserApprovals, setUserApprovedApprovals] = useState<any[]>([]);
+    const [rejectedUserApprovals, setUserRejectedApprovals] = useState<any[]>([]);
     const token = props.token;
     
     /**
@@ -53,6 +56,18 @@ export function ApprovalsView(props) {
         const userEmail = userResponse.mail; // Email of current user
         
         // input_email = userEmail;//add: use it in the UpdateApprovalStatus function
+        // get the user approvals first
+        const pendingPayload = await getUserApprovalsByStatus(userEmail, 1);
+        const pendingResponseUser = pendingPayload.data;
+        const approvedPayload = await getUserApprovalsByStatus(userEmail, 2);
+        const approvedResponseUser = approvedPayload.data;
+        const rejectedPayload = await getUserApprovalsByStatus(userEmail, 0);
+        const rejectedResponseUser = rejectedPayload.data;
+        setUserPendingApprovals(pendingResponseUser);
+        setUserApprovedApprovals(approvedResponseUser);
+        setUserRejectedApprovals(rejectedResponseUser);
+
+
         
         const approverResponse = await getApproverByEmail(userEmail); // Check if current user is an approver
         const approver = approverResponse.data[0];
@@ -129,6 +144,149 @@ export function ApprovalsView(props) {
         );
     }
 
+    const ApprovalCardRevoke = (approval) => {
+        return (
+            <Card fluid id={`approval_${approval.id}`}>
+                <Card.Header>
+                    <Flex gap="gap.small">
+                        <Avatar name={`${approval.inviterFirst} ${approval.inviterLast}`} />
+                        <Flex column>
+                            <Text content={`${approval.inviterFirst} ${approval.inviterLast}`} weight="bold" />
+                            <Text content={approval.inviterEmail} />
+                        </Flex>
+                    </Flex>
+                </Card.Header>
+                <Card.Body style={{
+                    padding: "0 2.6rem"
+                }}>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Team" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.team} />
+                        </Flex.Item>
+                    </Flex>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Company" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.company} />
+                        </Flex.Item>
+                    </Flex>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Domain" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.domain} />
+                        </Flex.Item>
+                    </Flex>
+                </Card.Body>
+                <Card.Footer>
+                    <Flex space="around">
+                        <Button content="Revoke Permissions"  onClick={() => handleReject(approval.id, approval.inviterId, approval.inviterPermissions, approval.approverId)} />
+                    </Flex>
+                </Card.Footer>
+            </Card>
+        );
+    }
+
+    const ApprovalCardApprove = (approval) => {
+        return (
+            <Card fluid id={`approval_${approval.id}`}>
+                <Card.Header>
+                    <Flex gap="gap.small">
+                        <Avatar name={`${approval.inviterFirst} ${approval.inviterLast}`} />
+                        <Flex column>
+                            <Text content={`${approval.inviterFirst} ${approval.inviterLast}`} weight="bold" />
+                            <Text content={approval.inviterEmail} />
+                        </Flex>
+                    </Flex>
+                </Card.Header>
+                <Card.Body style={{
+                    padding: "0 2.6rem"
+                }}>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Team" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.team} />
+                        </Flex.Item>
+                    </Flex>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Company" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.company} />
+                        </Flex.Item>
+                    </Flex>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Domain" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.domain} />
+                        </Flex.Item>
+                    </Flex>
+                </Card.Body>
+                <Card.Footer>
+                    <Flex space="around">
+                        <Button content="Approve" onClick={() => handleApprove(approval.id, approval.inviterId, approval.inviterPermissions, approval.approverId)}/>                    
+                    </Flex>
+                </Card.Footer>
+            </Card>
+        );
+    }
+
+
+    const UserCard = (approval) => {
+        return (
+            <Card fluid id={`approval_${approval.id}`}>
+                <Card.Header>
+                    <Flex gap="gap.small">
+                        <Avatar name={`${approval.inviterFirst} ${approval.inviterLast}`} />
+                        <Flex column>
+                            <Text content={`${approval.inviterFirst} ${approval.inviterLast}`} weight="bold" />
+                            <Text content={approval.inviterEmail} />
+                        </Flex>
+                    </Flex>
+                </Card.Header>
+                <Card.Body style={{
+                    padding: "0 2.6rem"
+                }}>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Team" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.team} />
+                        </Flex.Item>
+                    </Flex>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Company" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.company} />
+                        </Flex.Item>
+                    </Flex>
+                    <Flex gap="gap.small">
+                        <Flex.Item size="size.quarter">
+                            <Text weight="bold" content="Domain" />
+                        </Flex.Item>
+                        <Flex.Item >
+                            <Text content={approval.domain} />
+                        </Flex.Item>
+                    </Flex>
+                </Card.Body>
+            </Card>
+        );
+    }
+
     return (
         <Fragment> 
             <Flex column fill={true} gap="gap.large">
@@ -137,60 +295,137 @@ export function ApprovalsView(props) {
                 </Flex>
                 
                 <Accordion defaultActiveIndex={[0]} panels={
-                    [{
+                    [{ 
                         title: {
-                            content: (
-                                <span>
-                                    <Text weight="bold" disabled={pendingApprovals.length === 0 ? true : false} content="Pending Approvals " />
-                                    <Text disabled={pendingApprovals.length === 0 ? true : false} content={`(${pendingApprovals.length})`} />
-                                </span>
-                            ),
-                            disabled: pendingApprovals.length === 0 ? true : false
-                        },
-                        content: (<Grid columns={3}>
-                            {
-                                pendingApprovals.map(approval => {
-                                    return ApprovalCard(approval)
-                                })
-                            }
-                        </Grid>)
+                        content: (
+                            <span>
+                                <Text weight="bold"  content="User Approvals " />
+                            </span>
+                        ),
                     },
+                    content: (<Accordion defaultActiveIndex={[0]} panels={
+                        [{
+                            title: {
+                                content: (
+                                    <span>
+                                        <Text weight="bold" disabled={pendingUserApprovals.length === 0 ? true : false} content="Pending" />
+                                        <Text disabled={pendingUserApprovals.length === 0 ? true : false} content={`(${pendingUserApprovals.length})`} />
+                                    </span>
+                                ),
+                                disabled: pendingUserApprovals.length === 0 ? true : false
+                            },
+                            content: (<Grid columns={3}>
+                                {
+                                    pendingUserApprovals.map(approval => {
+                                        return UserCard(approval)
+                                    })
+                                }
+                            </Grid>)
+                        },
+                        {
+                            title: {
+                                content: (
+                                    <span>
+                                        <Text weight="bold" disabled={approvedUserApprovals.length === 0 ? true : false} content="Approved" />
+                                        <Text disabled={approvedUserApprovals.length === 0 ? true : false} content={`(${approvedUserApprovals.length})`} />
+                                    </span>
+                                ),
+                                disabled: approvedUserApprovals.length === 0 ? true : false
+                            },
+                            content: (<Grid columns={3}>
+                                {
+                                    approvedUserApprovals.map(approval => {
+                                        return UserCard(approval)
+                                    })
+                                }
+                            </Grid>)
+                        },
+                        {
+                            title: {
+                                content: (
+                                    <span>
+                                        <Text weight="bold" disabled={rejectedUserApprovals.length === 0 ? true : false} content="Rejected" />
+                                        <Text disabled={rejectedUserApprovals.length === 0 ? true : false} content={`(${rejectedUserApprovals.length})`} />
+                                    </span>
+                                ),
+                                disabled: rejectedUserApprovals.length === 0 ? true : false
+                            },
+                            content: (<Grid columns={3}>
+                                {
+                                    rejectedUserApprovals.map(approval => {
+                                        return UserCard(approval)
+                                    })
+                                }
+                            </Grid>)
+                        }]
+                    }/>
+                    )},
                     {
                         title: {
                             content: (
                                 <span>
-                                    <Text weight="bold" disabled={approvedApprovals.length === 0 ? true : false} content="Approved Approvals " />
-                                    <Text disabled={approvedApprovals.length === 0 ? true : false} content={`(${approvedApprovals.length})`} />
+                                    <Text weight="bold" content=" Approver Approvals " />
                                 </span>
                             ),
-                            disabled: approvedApprovals.length === 0 ? true : false
                         },
-                        content: (<Grid columns={3}>
+                        content: (<Accordion defaultActiveIndex={[0]} panels={
+                            [{
+                                title: {
+                                    content: (
+                                        <span>
+                                            <Text weight="bold" disabled={pendingApprovals.length === 0 ? true : false} content="Pending" />
+                                            <Text disabled={pendingApprovals.length === 0 ? true : false} content={`(${pendingApprovals.length})`} />
+                                        </span>
+                                    ),
+                                    disabled: pendingApprovals.length === 0 ? true : false
+                                },
+                                content: (<Grid columns={3}>
+                                    {
+                                        pendingApprovals.map(approval => {
+                                            return ApprovalCard(approval)
+                                        })
+                                    }
+                                </Grid>)
+                            },
                             {
-                                approvedApprovals.map(approval => {
-                                    return ApprovalCard(approval)
-                                })
-                            }
-                        </Grid>)
-                    },
-                    {
-                        title: {
-                            content: (
-                                <span>
-                                    <Text weight="bold" disabled={rejectedApprovals.length === 0 ? true : false} content="Rejected Approvals " />
-                                    <Text disabled={rejectedApprovals.length === 0 ? true : false} content={`(${rejectedApprovals.length})`} />
-                                </span>
-                            ),
-                            disabled: rejectedApprovals.length === 0 ? true : false
-                        },
-                        content: (<Grid columns={3}>
+                                title: {
+                                    content: (
+                                        <span>
+                                            <Text weight="bold" disabled={approvedApprovals.length === 0 ? true : false} content="Approved" />
+                                            <Text disabled={approvedApprovals.length === 0 ? true : false} content={`(${approvedApprovals.length})`} />
+                                        </span>
+                                    ),
+                                    disabled: approvedApprovals.length === 0 ? true : false
+                                },
+                                content: (<Grid columns={3}>
+                                    {
+                                        approvedApprovals.map(approval => {
+                                            return ApprovalCardRevoke(approval)
+                                        })
+                                    }
+                                </Grid>)
+                            },
                             {
-                                rejectedApprovals.map(approval => {
-                                    return ApprovalCard(approval)
-                                })
-                            }
-                        </Grid>)
-                    }]
+                                title: {
+                                    content: (
+                                        <span>
+                                            <Text weight="bold" disabled={rejectedApprovals.length === 0 ? true : false} content="Rejected" />
+                                            <Text disabled={rejectedApprovals.length === 0 ? true : false} content={`(${rejectedApprovals.length})`} />
+                                        </span>
+                                    ),
+                                    disabled: rejectedApprovals.length === 0 ? true : false
+                                },
+                                content: (<Grid columns={3}>
+                                    {
+                                        rejectedApprovals.map(approval => {
+                                            return ApprovalCardApprove(approval)
+                                        })
+                                    }
+                                </Grid>)
+                            }]
+                        }/>
+                        )}
+                    ]
                 } />
             </Flex>
         </Fragment>
