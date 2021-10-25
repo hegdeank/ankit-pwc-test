@@ -1,8 +1,14 @@
 import * as React from "react";
 import { useTeams } from "msteams-react-base-component";
 import { Button, Flex, Text, Avatar, Card, Grid } from "@fluentui/react-northstar";
-import { AcceptIcon, CloseIcon, ArrowLeftIcon, PresenceStrokeIcon, SubtractIcon } from "@fluentui/react-icons-northstar";
+import { AcceptIcon, ArrowLeftIcon, PresenceStrokeIcon, SubtractIcon } from "@fluentui/react-icons-northstar";
 import  ScheduleIcon  from '@material-ui/icons/Schedule';
+import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
+import CloseIcon from '@material-ui/icons/Close';
+import CheckIcon from '@material-ui/icons/Check';
+import ArrowBackIcon from '@material-ui/icons/ArrowBack';
+import RemoveIcon from '@material-ui/icons/Remove';
+
 
 type Option = {
   userImage: any;
@@ -23,23 +29,23 @@ export function MemberCard({ userImage, userName, userType, userStatus, dateAdde
 
     if (userPresence === "Available") {
         statusColor = "green";
-        statusIcon = <AcceptIcon />;
+        statusIcon = <CheckIcon />;
         statusTitle = "Available";
+    } else if (userPresence === "OutOfOffice, Offline"){
+        statusColor = "purple";
+        statusIcon = <ArrowBackIcon />;
+        statusTitle = "OutOfOffice";
     } else if (userPresence === "Offline") {
         statusColor = "grey";
         statusIcon = <CloseIcon />;
         statusTitle = "Offline";
-    } else if (userPresence === "OutOfOffice") {
-        statusColor = "purple";
-        statusIcon = <ArrowLeftIcon />;
-        statusTitle = "OutOfOffice";
     } else if ((userPresence === "Busy") || (userPresence === "InACall") || (userPresence === "InAConferenceCall") || (userPresence === "InAMeeting")){
         statusColor = "red";
         statusIcon = "";
         statusTitle = "Busy";
     } else if ((userPresence === "DoNotDisturb") || (userPresence === "Presenting") || (userPresence === "UrgentInteruptionsOnly")) {
         statusColor = "red";
-        statusIcon = <SubtractIcon />
+        statusIcon = <RemoveIcon />
         statusTitle = "DoNotDisturb";
     } else {
         statusColor = "orange";
@@ -73,7 +79,7 @@ export function MemberCard({ userImage, userName, userType, userStatus, dateAdde
                             size="large"
                             image={userImage}
                             name={userName}
-                            status={status}
+                            status = {status}
                         />
                         <Text content={userName} />
                     </Flex>
