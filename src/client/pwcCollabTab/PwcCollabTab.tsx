@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Provider, Flex, Text, Header, Divider, Button} from "@fluentui/react-northstar";
-import { Fragment, useState, useEffect, useCallback } from "react";
+import { Fragment, useState, useRef, useEffect, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
 import * as microsoftTeams from "@microsoft/teams-js";
 import jwtDecode from "jwt-decode";
@@ -21,7 +21,7 @@ export const PwcCollabTab = () => {
     const [teamName, setTeamName] = useState<string>();
     const [error, setError] = useState<string>();
     const [selectedMenuItem, setSelectedMenuItem] = useState("members");
-    const [activeType, setActiveStatus] = useState<string[]>([]);
+    const [userType, setUserType] = useState<number | undefined>();
     const [ssoToken, setSsoToken] = useState<string>();
     const [msGraphOboToken, setMsGraphOboToken] = useState<string>();
 
@@ -73,39 +73,33 @@ export const PwcCollabTab = () => {
         if (response.ok) {
             setMsGraphOboToken(responsePayload.access_token);
         } else {
-        if (responsePayload!.error === "consent_required") {
-            setError("consent_required");
-        } else {
-            setError("unknown SSO error");
+            if (responsePayload!.error === "consent_required") {
+                setError("Consent required");
+            } else {
+                setError(`Unknown SSO error: ${responsePayload!.error}`);
+            }
         }
-        }
-        // below is to set the permissions for who can see what - working on it
-        /**
+
+    }, [ssoToken]);
+
+    const getUserType = useCallback(async () => {
         const userData = await getCurrentUser(msGraphOboToken)
         const userEmail = userData.mail; // email needed to get user specific data from db
-        
         const userKey = await getUserByEmail(userEmail);
-        const userParams = userKey.data.length; // data from query that holds: id, firstname, lastname, email, permission
-        let panels: string[] = [];
-        console.log("User Status, If 1 then internal, if 0 then external: "+ userParams);
-        if(userParams){
-            panels.push("members");
-            panels.push("approvals");
-            
-        }else{
-            panels.push("members");
-        }
-        setActiveStatus(panels);
-        console.log(activeType)
-        */
-    }, [ssoToken]);
+        const userParams = userKey.data.length; // data from query that 
+        setUserType(userParams);
+    }, [msGraphOboToken])
 
     useEffect(() => {
     // if the SSO token is defined...
         if (ssoToken && ssoToken.length > 0) {
-        exchangeSsoTokenForOboToken();
+            exchangeSsoTokenForOboToken();
         }
     }, [exchangeSsoTokenForOboToken, ssoToken]);
+
+    useEffect(() => {
+        getUserType();
+    }, [getUserType, msGraphOboToken])
 
     /**
      * Handles the menu
@@ -121,18 +115,32 @@ export const PwcCollabTab = () => {
         <Provider theme={theme}>
         <Flex column gap="gap.smaller" padding="padding.medium" hAlign="center">
             {error && <div><Text content={`An SSO error occurred ${error}`} /></div>}
-            <NavMenu selected={selectedMenuItem} actType={activeType} callback={handleMenuSelect} />
+
+            {userType === 1 && 
+                <NavMenu 
+                    selected={selectedMenuItem} 
+                    callback={handleMenuSelect}
+                />
+            }
         </Flex>
         <Flex gap="gap.large" padding="padding.medium"
             styles={{
             padding: '1rem 2rem 4rem 4rem'
             }}>
             {selectedMenuItem === "members" &&(
-                <MembersView token={msGraphOboToken} teamId={teamId} teamName={teamName}/>
+                <MembersView 
+                    token={msGraphOboToken}
+                    teamId={teamId}
+                    teamName={teamName}
+                />
             )}
 
             {selectedMenuItem === "approvals" &&(
-                <ApprovalsView token={msGraphOboToken} teamId={teamId} teamName={teamName}/>
+                <ApprovalsView 
+                    token={msGraphOboToken}
+                    teamId={teamId}
+                    teamName={teamName}
+                />
             )}
 
             {selectedMenuItem === "dbtest" && (
