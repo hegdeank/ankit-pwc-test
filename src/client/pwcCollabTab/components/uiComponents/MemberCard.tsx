@@ -1,7 +1,8 @@
 import * as React from "react";
 import { useTeams } from "msteams-react-base-component";
 import { Button, Flex, Text, Avatar, Card, Grid } from "@fluentui/react-northstar";
-import { AcceptIcon, CloseIcon, ArrowLeftIcon, PresenceStrokeIcon } from "@fluentui/react-icons-northstar";
+import { AcceptIcon, CloseIcon, ArrowLeftIcon, PresenceStrokeIcon, SubtractIcon } from "@fluentui/react-icons-northstar";
+import  ScheduleIcon  from '@material-ui/icons/Schedule';
 
 type Option = {
   userImage: any;
@@ -32,10 +33,35 @@ export function MemberCard({ userImage, userName, userType, userStatus, dateAdde
         statusColor = "purple";
         statusIcon = <ArrowLeftIcon />;
         statusTitle = "OutOfOffice";
+    } else if ((userPresence === "Busy") || (userPresence === "InACall") || (userPresence === "InAConferenceCall") || (userPresence === "InAMeeting")){
+        statusColor = "red";
+        statusIcon = "";
+        statusTitle = "Busy";
+    } else if ((userPresence === "DoNotDisturb") || (userPresence === "Presenting") || (userPresence === "UrgentInteruptionsOnly")) {
+        statusColor = "red";
+        statusIcon = <SubtractIcon />
+        statusTitle = "DoNotDisturb";
     } else {
         statusColor = "orange";
-        statusIcon = <PresenceStrokeIcon />;
+        statusIcon = <ScheduleIcon />;
         statusTitle = "Away";
+    }
+
+    let status;
+    
+    if (statusIcon === "") {
+        status = {
+            color: statusColor,
+            title: statusTitle,
+            size: "large"
+        }
+    } else {
+        status = {
+            color: statusColor,
+            icon: statusIcon,
+            title: statusTitle,
+            size: "large"
+        }
     }
 
     return (
@@ -47,12 +73,7 @@ export function MemberCard({ userImage, userName, userType, userStatus, dateAdde
                             size="large"
                             image={userImage}
                             name={userName}
-                            status={{
-                                color: statusColor,
-                                icon: statusIcon,
-                                title: statusTitle,
-                                size: "large"
-                            }}
+                            status={status}
                         />
                         <Text content={userName} />
                     </Flex>
