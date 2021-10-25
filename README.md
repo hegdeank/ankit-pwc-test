@@ -35,6 +35,12 @@ Install database dependecies using
 ```bash
 npm install mysql
 ```
+
+Install UI Component Packages with these commands:
+```bash
+npm install --save @fluentui/react-icons-northstar
+npm install @material-ui/core @material-ui/icons
+```
 ## Running the app locally
 
 Run `gulp ngrok-serve` in the main directory of the project.
