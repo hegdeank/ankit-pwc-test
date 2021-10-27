@@ -7,6 +7,7 @@ import {
 import { CloseIcon, ParticipantAddIcon } from "@fluentui/react-icons-northstar";
 import { invite, addTeamMember, sendEmail, getCurrentUser } from "../services/GraphService";
 import { getApproverByDomain, getUserByEmail, getApprovers, addApproval, getUserApprovalsById } from "../services/PwCService";
+import { countMembersInTeam, requestAccess,createAccessPackagePolicy,addResourceRoleToAccessPackage, createAccessPackage, getResourcesRole, getCatalogResources, addGroupToCatalog, getCatalogID } from "../services/GraphService";
 
 export function InviteDialog(props) {
     const [guestsInput, setGuestsInput] = useState<string>("");
@@ -368,3 +369,41 @@ Contact the sending party for more information if needed.`
         />
     );
 }
+
+// const handleCreatingAccessPackage= async(token,userID) =>{
+//     //check if there is an access package exist or not by checking amount of team member
+//     //if there is only one person in a group --->Need to create an AccessPackage 
+//     var numbersOfMemberInGroup = countMembersInTeam(token,teamId);
+//     if (Number(numbersOfMemberInGroup)<=1){
+//         //1. starting create Catalog
+//         var catalogID = getCatalogID(token);
+//         console.log(catalogID);
+//         //2. Add group to the catalog
+//         var description = teamName + "'s Catalog";
+//         var response_check = addGroupToCatalog(token,teamName,catalogID,teamId,description);
+//         console.log(response_check);
+//         //3. GetCatalogResourcesID
+//         var groupResourceID= getCatalogResources(token,catalogID,teamName);
+//         console.log(groupResourceID);
+//         //4. GetResourceRole
+//         var resourcesRoles = getResourcesRole(token,catalogID,groupResourceID);
+//         var memberOriginID = resourcesRoles["memberOriginID"];
+//         var packageResourceID = resourcesRoles["accessPackageResourceID"];
+//         var packageResourceType=resourcesRoles["packageResourceType"];
+//         //5.CreateAccessPackage
+//         var packageName = teamName;
+//         var packageDescription = teamName + "'s Access Package";
+//         var accessPackageID = createAccessPackage(token,packageName,catalogID,packageDescription);
+//         //6.  addResourceRoleToAccessPackage
+//         var response_adding = addResourceRoleToAccessPackage(token, memberOriginID,accessPackageID,groupResourceID, packageResourceID,packageResourceType);
+//         //7. Creating access package policy
+//         var policyID = createAccessPackagePolicy(token,accessPackageID,userID);
+//         console.log("New Access Package has been created!");
+
+//     }else{
+//         console.log("No access package created.");
+//         console.log(numbersOfMemberInGroup);
+//     }
+//     //var requestID = requestAccess(token,accessPackageID,userID,policyID);
+
+// };
