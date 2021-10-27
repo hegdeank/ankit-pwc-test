@@ -577,3 +577,46 @@ export async function requestAccess(token, accessPackageID,userID,policyID): Pro
     }
     return;
 }
+
+
+//revoke the assignment for a user/requestor
+//https://graph.microsoft.com/beta/identityGovernance/entitlementManagement/accessPackageAssignmentRequests
+export async function removeAnAssignment(token,requestID): Promise<any> {
+    const endpoint = `${betaUrl}identityGovernance/entitlementManagement/accessPackageAssignmentRequests`;
+    
+    //body object
+    //id-->requestID
+    const bodyObject={
+        "requestType": "AdminRemove",
+        "accessPackageAssignment":{
+           "id": `${requestID}`
+        }
+      };
+
+    //request object
+    const requestObject = {
+        method: "POST",
+        headers: {
+            authorization: `bearer ${token}`,
+            "content-type": "application/json"
+            
+        },
+        body: JSON.stringify(bodyObject)   
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        var raw_data=await response.json();
+        var  json= JSON.stringify(raw_data);
+        var data = JSON.parse(json);
+        var requestState=data.requestState;  //Submitted
+        var requestStatus=data.requestStatus; //Approved
+        if (requestState != "Submitted" || requestStatus!="Approved"){   //checking error during giving permission to user
+            return "Error Occurs during requesting";
+        }
+        return true;
+        
+    }
+    return;
+}
