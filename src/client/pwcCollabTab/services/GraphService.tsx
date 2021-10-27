@@ -620,3 +620,28 @@ export async function removeAnAssignment(token,requestID): Promise<any> {
     }
     return;
 }
+
+//https://graph.microsoft.com/v1.0/groups/{group-id}/members?$count=true
+//eg. https://graph.microsoft.com/v1.0/groups/35956143-9163-4d33-8781-f1909eef3e3b/members?$count=true
+// Getting the number of members in a specific group by groupID
+export async function countMembersInTeam(token,groupID): Promise<any> {
+    const endpoint = `${baseUrl}groups/${groupID}/members?$count=true`;
+    const requestObject = {
+        method: "GET",
+        headers: {
+            authorization: `bearer ${token}`,
+            "content-type": "application/json"
+        }
+    };
+
+    // Fetch response
+    const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        var raw_data=await response.json();
+        var  json= JSON.stringify(raw_data);
+        var data = JSON.parse(json);
+        var count=data["@odata.count"];
+        return count; //return the amount of members in a group
+    }
+    return;
+};
