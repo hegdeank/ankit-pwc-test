@@ -3,7 +3,6 @@ import { Fragment, useEffect, useState, useCallback } from "react";
 import {
     Accordion, Avatar, Card, Button, Flex, Grid, Input, Text
 } from "@fluentui/react-northstar";
-import { SearchIcon } from "@fluentui/react-icons-northstar";
 import { getCurrentUser } from "../services/GraphService";
 import { getApproverApprovals, getApproverByEmail, updateApprovalStatus, updateUserPermissions, getUserApprovalsByStatus } from "../services/PwCService";
 
@@ -290,10 +289,6 @@ export function ApprovalsView(props) {
     return (
         <Fragment> 
             <Flex column fill={true} gap="gap.large">
-                <Flex space="between">
-                    <Input icon={<SearchIcon />} placeholder="Search for members" />
-                </Flex>
-                
                 <Accordion defaultActiveIndex={[0]} panels={
                     [{ 
                         title: {

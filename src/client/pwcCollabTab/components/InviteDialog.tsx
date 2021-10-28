@@ -2,7 +2,7 @@ import * as React from "react";
 import { Fragment, useEffect, useState } from "react";
 import {
     Button, Flex, Input, Form, FormField, Divider, Dialog,
-    Text, Pill, PillGroup, TextArea, List, Checkbox
+    Text, Pill, PillGroup, TextArea, Checkbox, List
 } from "@fluentui/react-northstar";
 import { CloseIcon, ParticipantAddIcon } from "@fluentui/react-icons-northstar";
 import { invite, addTeamMember, sendEmail, getCurrentUser } from "../services/GraphService";
@@ -20,6 +20,7 @@ export function InviteDialog(props) {
     const [approversRequest, setApproversRequest] = useState<any[]>([]);
     const [approvalsCreate, setApprovalsCreate] = useState<any[]>([]);
     const [open, setOpen] = useState<boolean>(false);
+    const [approvalStage, setApprovalStage] = useState<number>(0);
     const token = props.token;
     const teamId = props.teamId;
     const teamName = props.teamName;
@@ -244,51 +245,77 @@ Contact the sending party for more information if needed.`
         };
         await sendEmail(token, sendMail);
     }
-    
-    const handleApprovalSelect = (domain) => {
-        let approvals = [...approvalsCreate];
-        let index =  approvals.findIndex(approval => approval.domain === domain);
-        if (approvals[index].selected) {
-            approvals[index].selected = false;
-        } else {
-            approvals[index].selected = true;
-        }
-        console.log(approvals[index]);
-        setApprovalsCreate(approvals);
-    }
-    
-    const handleApprovalSubmit = () => {
-        const approvals = approvalsCreate.filter(approval => approval.selected);
-
-        approvals.forEach(approval => addApproval({
-            app_id: approval.app_id,
-            use_id: approval.use_id,
-            channel: teamName
-        }))
-
-        setApprovalsCreate([]);
-    }
 
     const ApprovalChecks = () => {
+        const handleApprovalSelect = (domain) => {
+            let approvals = [...approvalsCreate];
+            let index =  approvals.findIndex(approval => approval.domain === domain);
+            if (approvals[index].selected) {
+                approvals[index].selected = false;
+            } else {
+                approvals[index].selected = true;
+            }
+            console.log(approvals[index]);
+            setApprovalsCreate(approvals);
+        }
+        
+        const handleApprovalSubmit = () => {
+            const approvals = approvalsCreate.filter(approval => approval.selected);
+    
+            approvals.forEach(approval => addApproval({
+                app_id: approval.app_id,
+                use_id: approval.use_id,
+                channel: teamName
+            }))
+
+            setApprovalStage(1);
+            setApprovalsCreate(approvals);
+    
+            // setApprovalsCreate([]);
+        }
+
         return (
-            <Flex column gap="gap.large">
-                <Text content="You were not approved to invite users from the following domains. Select domains you would like to create approvals for." />
-                <Flex column gap="gap.small">
-                    {
-                        approvalsCreate.map(approval => 
-                            <Checkbox 
-                                checked={approval.selected} 
-                                label={approval.domain} 
-                                onClick={() => handleApprovalSelect(approval.domain)}
-                            />
-                        )
+            
+                <Flex column gap="gap.large">
+                    {approvalStage === 0 ?
+                        <Fragment>
+                            <Text content="You were not approved to invite users from the following domains. Select domains you would like to create approvals for." />
+                            <Flex column gap="gap.small">
+                                {
+                                    approvalsCreate.map(approval => 
+                                        <Checkbox 
+                                            checked={approval.selected} 
+                                            label={approval.domain} 
+                                            onClick={() => handleApprovalSelect(approval.domain)}
+                                        />
+                                    )
+                                }
+                            </Flex>
+                            <Flex gap="gap.medium" hAlign="center">
+                                <Button content="Cancel" onClick={() => setApprovalsCreate([])} />    
+                                <Button content="Create Approvals" primary onClick={() => handleApprovalSubmit()} />
+                            </Flex>
+                        </Fragment>
+                        :
+                        <Fragment>
+                            <Text content="Approvals have been created for the following domains: " />
+                            <Flex column gap="gap.smaller">
+                                {
+                                    approvalsCreate.map(approval => 
+                                        <Text content={approval.domain} />
+                                    )
+                                }
+                            </Flex>
+                            <Flex gap="gap.medium" hAlign="center">
+                                <Button content="Return" onClick={() => {
+                                    setApprovalStage(0);
+                                    setApprovalsCreate([]);
+                                }} />
+                            </Flex>
+                        </Fragment>
                     }
                 </Flex>
-                <Flex gap="gap.medium" hAlign="end">
-                    <Button content="Cancel" onClick={() => setApprovalsCreate([])} />    
-                    <Button content="Create Approvals" primary onClick={() => handleApprovalSubmit()} />
-                </Flex>
-            </Flex>
+            
         );
     }
 

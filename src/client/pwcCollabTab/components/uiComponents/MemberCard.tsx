@@ -1,8 +1,6 @@
 import * as React from "react";
-import { useTeams } from "msteams-react-base-component";
 import { Button, Flex, Text, Avatar, Card, Grid } from "@fluentui/react-northstar";
-import { AcceptIcon, ArrowLeftIcon, PresenceStrokeIcon, SubtractIcon } from "@fluentui/react-icons-northstar";
-import  ScheduleIcon  from '@material-ui/icons/Schedule';
+import ScheduleIcon  from '@material-ui/icons/Schedule';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import CloseIcon from '@material-ui/icons/Close';
 import CheckIcon from '@material-ui/icons/Check';
@@ -11,18 +9,21 @@ import RemoveIcon from '@material-ui/icons/Remove';
 
 
 type Option = {
-  userImage: any;
-  userName: string;
-  userType: string;
-  userStatus: string;
-  dateAdded: string;
-  userRole: string;
-  userEmail: string;
-  userPresence: string;
+    userId: string;
+    teamId: string;
+    userImage: any;
+    userName: string;
+    userType: string;
+    userStatus: string;
+    dateAdded: string;
+    userRole: string;
+    userEmail: string;
+    userPresence: string;
+    canDelete: boolean;
+    callback: (user: {id: string, teamId: string, name: string}) => Promise<void>;
 };
 
-export function MemberCard({ userImage, userName, userType, userStatus, dateAdded, userRole, userEmail, userPresence }: Option) {
-    const [{ theme, context }] = useTeams();
+export function MemberCard({ userId, teamId, userImage, userName, userType, userStatus, dateAdded, userRole, userEmail, userPresence, canDelete, callback }: Option) {
     let statusColor = "";
     let statusIcon;
     let statusTitle = "";
@@ -41,7 +42,6 @@ export function MemberCard({ userImage, userName, userType, userStatus, dateAdde
         statusTitle = "Offline";
     } else if ((userPresence === "Busy") || (userPresence === "InACall") || (userPresence === "InAConferenceCall") || (userPresence === "InAMeeting")){
         statusColor = "red";
-        statusIcon = "";
         statusTitle = "Busy";
     } else if ((userPresence === "DoNotDisturb") || (userPresence === "Presenting") || (userPresence === "UrgentInteruptionsOnly")) {
         statusColor = "red";
@@ -101,12 +101,11 @@ export function MemberCard({ userImage, userName, userType, userStatus, dateAdde
                     </Flex>
 
                     <Flex hAlign="end" vAlign="center">
-                        {userRole.includes("guest") && (
-                            <Button primary
+                        {(userRole.includes("guest") && canDelete) && (
+                            <Button
                                 size="small"
-                                onClick={() => console.log("Delete Button Clicked")} 
-                                style={{ backgroundColor: theme.siteVariables.colors.red[300] }} 
-                                content="Delete?" 
+                                onClick={() => callback({id: userId, teamId: teamId, name: userName})}
+                                content="Delete"
                             />
                         )}
                     </Flex>

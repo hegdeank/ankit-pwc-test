@@ -98,8 +98,6 @@ export const getUserByEmail = async (req, res) => {
 };
 
 export const updateUserPermissions = async (req, res) => {
-    log(req.body);
-
     //since a user can be in multiple team channels
    conn.query(
        "UPDATE table_users SET permission=? WHERE id=?",
@@ -114,7 +112,6 @@ export const updateUserPermissions = async (req, res) => {
            
            const ret = JSON.stringify(results);
            const json = JSON.parse(ret);
-           log(ret);
            res.setHeader("Content-Type", "application/json");
            res.status(200).send({ data: json });
        }
@@ -173,7 +170,6 @@ export const getApproverApprovals = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(json);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -191,7 +187,6 @@ export const getUserApprovalsByStatus = async (req, res) => {
             if (err) throw err;
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(json);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }
@@ -272,7 +267,6 @@ export const getUserID = async (req, res) => {
 //Update the approval_status by userId
 // 0->deny; 1->pending; 2->yes;
 export const updateApprovalStatus = async (req, res) => {
-     log(req.body);
 
      //since a user can be in multiple team channels
     conn.query(
@@ -288,7 +282,6 @@ export const updateApprovalStatus = async (req, res) => {
             
             const ret = JSON.stringify(results);
             const json = JSON.parse(ret);
-            log(ret);
             res.setHeader("Content-Type", "application/json");
             res.status(200).send({ data: json });
         }

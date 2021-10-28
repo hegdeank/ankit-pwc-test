@@ -1,43 +1,17 @@
 import * as React from "react";
-import { Fragment, useEffect, useState, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
+import { useEffect, useState, useCallback } from "react";
 import {
-    Accordion, Card, Input, Flex, Grid, Loader, Skeleton, Text
+    Accordion, Button, Card, Dialog, Input, Flex, Grid, Skeleton, Text
 } from "@fluentui/react-northstar";
-import { SearchIcon } from "@fluentui/react-icons-northstar";
+import { SearchIcon, CloseIcon } from "@fluentui/react-icons-northstar";
 import {
     getUser, getTeamMembers, deleteUser, removeTeamMember,
-    getCurrentUser, getUserPresence, getUserPhoto
+    getUserPresence, getUserPhoto
 } from "../services/GraphService";
-import { getUserByEmail } from "../services/PwCService";
 import { InviteDialog } from "./InviteDialog";
 import { MemberCard } from "./uiComponents/MemberCard";
 
-const CardHeader = () => {
-    return (
-        <Grid columns="6" style={{ 
-            columnGap: "32px",
-            padding: "0 1rem"
-        }} >
-            <Flex hAlign="start" vAlign="center">
-                <Text content="Name" />
-            </Flex>
-            <Flex hAlign="start" vAlign="center">
-                <Text content="User Type" />
-            </Flex>
-            <Flex hAlign="start" vAlign="center">
-                <Text content="Status" />
-            </Flex>
-            <Flex hAlign="start" vAlign="center">
-                <Text content="Date Added" />
-            </Flex>
-            <Flex hAlign="start" vAlign="center">
-                <Text content="Role" />
-            </Flex>
-            <Flex></Flex>
-        </Grid>
-    );
-}
 
 export function MembersView(props) {
     const [ownerRows, setOwnerRows] = useState<any[] | undefined>();
@@ -45,10 +19,15 @@ export function MembersView(props) {
     const [pendingRows, setPendingRows] = useState<any[] | undefined>();
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
     const [activePanels, setActivePanels] = useState<number[]>([]);
-    const [memberType, setMemberStatus] = useState<number>();
+    const [dialogOpen, setDialogOpen] = useState<boolean>(false);
+    const [selectedUser, setSelectedUser] = useState<{id: string, teamId: string, name: string}>({id: "", teamId: "", name: ""});
+    const [{ theme }] = useTeams();
     const token = props.token;
     const teamId = props.teamId;
+    const teamName = props.teamName;
+    const userType = props.userType;
 
+    /** Returns true if the member rows are undefined or not yet populated */
     const isLoading = () => {
         if ((!ownerRows || ownerRows.length === 0) && 
             (!memberRows || memberRows.length === 0) && 
@@ -58,6 +37,9 @@ export function MembersView(props) {
         return false;
     }
 
+    /**
+     * Gets team members for specified team
+     */
     const getTeamGuests = useCallback(async () => {
         if (!token) { return; }
 
@@ -69,28 +51,35 @@ export function MembersView(props) {
                 roles: user.roles
             });
         });
-        const userData = await getCurrentUser(token)
-        const userEmail = userData.mail; // email needed to get user specific data from db
-        
-        const userKey = await getUserByEmail(userEmail);
-        const userParams = userKey.data.length; // data from query that holds: id, firstname, lastname, email, permission
 
-        setMemberStatus(userParams);
         setTeamMembers(teamMemberResponse);
     }, [token]);
 
     const handleTeamMemberRemove = async (memberId : string) => {
-        await removeTeamMember(token, teamId, memberId);
-        // setRows([]);
-        // getTeamGuests();
+        const removeResponse = await removeTeamMember(token, teamId, memberId);
+        console.log(removeResponse);
+        setOwnerRows(ownerRows?.filter(row => row.teamId !== memberId));
+        setMemberRows(memberRows?.filter(row => row.teamId !== memberId));
+        setPendingRows(pendingRows?.filter(row => row.teamId !== memberId));
+        setDialogOpen(false);
     };
 
     const handleDeleteUser = async (userId : string) => {
         await deleteUser(token, userId);
-        // setRows([]);
-        // getTeamGuests();
+        setOwnerRows(ownerRows?.filter(row => row.id !== userId));
+        setMemberRows(memberRows?.filter(row => row.id !== userId));
+        setPendingRows(pendingRows?.filter(row => row.id !== userId));
+        setDialogOpen(false);
     };
 
+    const handleDelete = async (user : {id: string, teamId: string, name: string}) => {
+        setSelectedUser(user);
+        setDialogOpen(true);
+    };
+
+    /**
+     * Gets user representation of team members
+     */
     const getUsersById = useCallback(async () => {
         if (!token) { return; }
 
@@ -102,7 +91,7 @@ export function MembersView(props) {
             const user = await getUser(
                 token,
                 teamMember.userId,
-                "companyName,createdDateTime,displayName,externalUserState,id,mail,userType"
+                "createdDateTime,displayName,externalUserState,id,mail,userType"
             );
             
             const indivUserPresence = await getUserPresence(
@@ -121,43 +110,48 @@ export function MembersView(props) {
             let formatStatus = user.externalUserState === "PendingAcceptance" ? "Pending Acceptance" : user.externalUserState;
 
             const memberRow = <MemberCard 
-                userImage = {indivUserPhoto}
-                userName = {user.displayName}
-                userType = {user.userType}
-                userStatus = {formatStatus}
-                dateAdded = {createdDate}
-                userRole = {teamMember.roles}
-                userEmail = {user.mail}
-                userPresence = {indivUserPresence.activity}
+                userId={teamMember.userId}
+                teamId={teamMember.id}
+                userImage={indivUserPhoto}
+                userName={user.displayName}
+                userType={user.userType}
+                userStatus={formatStatus}
+                dateAdded={createdDate}
+                userRole={teamMember.roles}
+                userEmail={user.mail}
+                userPresence={indivUserPresence.activity}
+                canDelete={userType === 1}
+                callback={handleDelete}
             />
 
             if (teamMember.roles.includes("owner")) {
-                ownerUserRows.push(memberRow);
+                ownerUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             } else if (user.externalUserState === "PendingAcceptance") {
-                pendingUserRows.push(memberRow);
+                pendingUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             } else {
-                if (teamMember.roles.includes("guest")) {
-                    memberUserRows.push(memberRow);
-                }
-                else{
-                    memberUserRows.push(memberRow);
-                }
-                
+                memberUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             }
         }
+
         setOwnerRows(ownerUserRows);
         setMemberRows(memberUserRows);
         setPendingRows(pendingUserRows);
-    }, [teamMembers]);
+    }, [teamMembers, userType]);
 
     useEffect(() => {
         getTeamGuests();
     }, [token]);
 
     useEffect(() => {
+        setOwnerRows([]);
+        setMemberRows([]);
+        setPendingRows([]);
         getUsersById();
-    }, [teamMembers]);
+    }, [teamMembers, userType]);
 
+    /**
+     * Sets the active panels of the accordion
+     */
     useEffect(() => {
         let panels: number[] = [];
         if (ownerRows && ownerRows.length !== 0) {
@@ -183,7 +177,35 @@ export function MembersView(props) {
             setActivePanels([...activePanels, panelIndex]);
         }
     }
+    
+    /** Header of fields for the member cards */
+    const CardHeader = () => {
+        return (
+            <Grid columns="6" style={{ 
+                columnGap: "32px",
+                padding: "0 1rem"
+            }} >
+                <Flex hAlign="start" vAlign="center">
+                    <Text content="Name" />
+                </Flex>
+                <Flex hAlign="start" vAlign="center">
+                    <Text content="User Type" />
+                </Flex>
+                <Flex hAlign="start" vAlign="center">
+                    <Text content="Status" />
+                </Flex>
+                <Flex hAlign="start" vAlign="center">
+                    <Text content="Date Added" />
+                </Flex>
+                <Flex hAlign="start" vAlign="center">
+                    <Text content="Role" />
+                </Flex>
+                <Flex></Flex>
+            </Grid>
+        );
+    }
 
+    /** Accordion of member cards */
     const MemberAccordion = () => {
         return (
             <Accordion activeIndex={activePanels} panels={
@@ -202,7 +224,7 @@ export function MembersView(props) {
                         content:(
                             <Flex column gap="gap.smaller">
                                 <CardHeader />
-                                {ownerRows}
+                                { ownerRows?.map(row => row.row) }
                             </Flex>
                         )
                     },
@@ -220,7 +242,7 @@ export function MembersView(props) {
                         content: (
                             <Flex column gap="gap.smaller">
                                 <CardHeader />
-                                {memberRows}
+                                { memberRows?.map(row => row.row) }
                             </Flex>
                         )
                     },
@@ -238,7 +260,7 @@ export function MembersView(props) {
                         content: (
                             <Flex column gap="gap.smaller">
                                 <CardHeader />
-                                {pendingRows}
+                                { pendingRows?.map(row => row.row) }
                             </Flex>
                         )
                     }
@@ -247,6 +269,7 @@ export function MembersView(props) {
         );
     }
 
+    /** Skeleton replacement for loading Accordion */
     const MemberLoading = () => {
         const CardLoading = () => {
             return (
@@ -275,21 +298,47 @@ export function MembersView(props) {
         );
     }
 
+    const DeleteDialog= () => {
+        return (
+            <Dialog
+                open={dialogOpen}
+                onOpen={() => setDialogOpen(true)}
+                onCancel={() => setDialogOpen(false)}
+                header={`Delete ${selectedUser.name}`}
+                headerAction={{
+                    icon: <CloseIcon />,
+                    title: 'Close',
+                    onClick: () => setDialogOpen(false),
+                }}
+                content={
+                    <Flex column gap="gap.large">
+                        <Text content="Would you like to delete this user?" />
+                        <Flex gap="gap.medium" hAlign="center">
+                            <Button content="Delete From Team" onClick={() => handleTeamMemberRemove(selectedUser.teamId)} />    
+                            <Button 
+                                content="Delete From Organization"
+                                primary
+                                onClick={() => handleDeleteUser(selectedUser.id)}
+                                style={{ backgroundColor: theme.siteVariables.colors.red[300] }} 
+                            />
+                        </Flex>
+                    </Flex>
+                }
+            />
+        );
+    }
+
     return (
-        <Fragment>
-            
+        <React.Fragment>
+            <DeleteDialog />
             <Flex column fill={true} gap="gap.large">
                 <Flex space="between">
                     <Input icon={<SearchIcon />} placeholder="Search for members" />
-                    { memberType === 1 && 
-                        <InviteDialog token={token} teamId={teamId} teamName={props.teamName}/>
-                    }
+                    { userType === 1 && <InviteDialog token={token} teamId={teamId} teamName={teamName}/> }
                 </Flex>
-
-                {/* { isLoading() && <Loader label="Loading members..." /> } */}
-                { isLoading() && <MemberLoading /> }
-                { !isLoading() && <MemberAccordion /> }
+                { isLoading() ? <MemberLoading /> : <MemberAccordion /> }
             </Flex>
-        </Fragment>
+        </React.Fragment>
+        
     );
 }

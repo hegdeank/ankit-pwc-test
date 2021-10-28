@@ -1,10 +1,10 @@
 import * as React from "react";
-import { Provider, Flex, Text, Header, Divider, Button} from "@fluentui/react-northstar";
-import { Fragment, useState, useRef, useEffect, useCallback } from "react";
+import { Provider, Flex, Text, Button } from "@fluentui/react-northstar";
+import { useState, useEffect, useCallback } from "react";
 import { useTeams } from "msteams-react-base-component";
 import * as microsoftTeams from "@microsoft/teams-js";
 import jwtDecode from "jwt-decode";
-import {getCurrentUser} from "./services/GraphService";
+import { getCurrentUser } from "./services/GraphService";
 import { getUserByEmail } from "./services/PwCService";
 import { NavMenu } from "./components/NavMenu";
 import { MembersView } from "./components/MembersView";
@@ -24,6 +24,7 @@ export const PwcCollabTab = () => {
     const [userType, setUserType] = useState<number | undefined>();
     const [ssoToken, setSsoToken] = useState<string>();
     const [msGraphOboToken, setMsGraphOboToken] = useState<string>();
+    const [adminVisible, setAdminVisible] = useState<boolean>(true);
 
     /**
      * Initially checks to see if the app is running in an instance of Teams
@@ -82,13 +83,15 @@ export const PwcCollabTab = () => {
 
     }, [ssoToken]);
 
+    /**
+     * Sets the user type
+     * A user is valid if the current user's email is found in the database
+     */
     const getUserType = useCallback(async () => {
-        const userData = await getCurrentUser(msGraphOboToken)
-        const userEmail = userData.mail; // email needed to get user specific data from db
-        const userKey = await getUserByEmail(userEmail);
-        const userParams = userKey.data.length; // data from query that 
-        setUserType(userParams);
-    }, [msGraphOboToken])
+        const userResponse = await getCurrentUser(msGraphOboToken)
+        const user = await getUserByEmail(userResponse.mail);
+        setUserType(user.data.length); // 0 is not a user, 1 is a user
+    }, [msGraphOboToken]);
 
     useEffect(() => {
     // if the SSO token is defined...
@@ -113,40 +116,66 @@ export const PwcCollabTab = () => {
      */
     return (
         <Provider theme={theme}>
-        <Flex column gap="gap.smaller" padding="padding.medium" hAlign="center">
-            {error && <div><Text content={`An SSO error occurred ${error}`} /></div>}
-
-            {userType === 1 && 
-                <NavMenu 
-                    selected={selectedMenuItem} 
-                    callback={handleMenuSelect}
-                />
+            {adminVisible &&
+                <Flex 
+                    hAlign="end"
+                    gap="gap.small"
+                    styles={{
+                        padding: "1rem 2rem 0 2rem"
+                    }}
+                >
+                    <Button content="Toggle User Type" onClick={
+                        () => {
+                            if (userType === 1) {
+                                setUserType(0);
+                            } else {
+                                setUserType(1);
+                            }
+                        }
+                    } />
+                    <Button content="DB Test Page" onClick={
+                        () => setSelectedMenuItem("dbtest")
+                    } />
+                    <Button content="Hide Admin Options" onClick={
+                        () => setAdminVisible(false)
+                    } />
+                </Flex>
             }
-        </Flex>
-        <Flex gap="gap.large" padding="padding.medium"
-            styles={{
-            padding: '1rem 2rem 4rem 4rem'
-            }}>
-            {selectedMenuItem === "members" &&(
-                <MembersView 
-                    token={msGraphOboToken}
-                    teamId={teamId}
-                    teamName={teamName}
-                />
-            )}
+            
+            <Flex column gap="gap.smaller" padding="padding.medium" hAlign="center">
+                {error && <div><Text content={`An SSO error occurred ${error}`} /></div>}
+                {userType === 1 && 
+                    <NavMenu 
+                        selected={selectedMenuItem} 
+                        callback={handleMenuSelect}
+                    />
+                }
+            </Flex>
+            <Flex gap="gap.large" padding="padding.medium"
+                styles={{
+                    padding: "1rem 2rem 4rem 4rem"
+                }}>
+                {selectedMenuItem === "members" &&(
+                    <MembersView 
+                        token={msGraphOboToken}
+                        teamId={teamId}
+                        teamName={teamName}
+                        userType={userType}
+                    />
+                )}
 
-            {selectedMenuItem === "approvals" &&(
-                <ApprovalsView 
-                    token={msGraphOboToken}
-                    teamId={teamId}
-                    teamName={teamName}
-                />
-            )}
+                {selectedMenuItem === "approvals" &&(
+                    <ApprovalsView 
+                        token={msGraphOboToken}
+                        teamId={teamId}
+                        teamName={teamName}
+                    />
+                )}
 
-            {selectedMenuItem === "dbtest" && (
-                <DatabaseTest />
-            )}
-        </Flex>
+                {selectedMenuItem === "dbtest" && (
+                    <DatabaseTest />
+                )}
+            </Flex>
         </Provider>
     );
 };

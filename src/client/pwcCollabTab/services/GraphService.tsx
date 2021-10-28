@@ -171,6 +171,9 @@ export async function removeTeamMember(token, teamId, memberId): Promise<any> {
 
     // Fetch response
     const response = await fetch(endpoint, requestObject);
+    if (response.ok) {
+        return await response;
+    }
 }
 
 // used for sending email to needed approver for either a request to be allowed to add or for notifying that we have added
