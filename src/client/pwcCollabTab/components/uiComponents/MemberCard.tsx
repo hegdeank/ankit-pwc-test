@@ -3,17 +3,6 @@ import { useTeams } from "msteams-react-base-component";
 import { Button, Flex, Text, Avatar, Card, Grid } from "@fluentui/react-northstar";
 import { AcceptIcon, ArrowLeftIcon, CloseIcon, SubtractIcon } from "@fluentui/react-icons-northstar";
 
-
-
-/* 
-import ScheduleIcon  from '@material-ui/icons/Schedule';
-import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
-import CloseIcon from '@material-ui/icons/Close';
-import CheckIcon from '@material-ui/icons/Check';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import RemoveIcon from '@material-ui/icons/Remove'; */
-
-
 type Option = {
     userId: string;
     teamId: string;
