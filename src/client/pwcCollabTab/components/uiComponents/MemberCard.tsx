@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTeams } from "msteams-react-base-component";
 import { Button, Flex, Text, Avatar, Card, Grid } from "@fluentui/react-northstar";
-
+import { AcceptIcon, ArrowLeftIcon, CloseIcon, SubtractIcon } from "@fluentui/react-icons-northstar";
 
 
 
@@ -34,29 +34,31 @@ export function MemberCard({ userId, teamId, userImage, userName, userType, user
     let statusColor = "";
     let statusIcon;
     let statusTitle = "";
+    let customIcon;
 
     if (userPresence === "Available") {
         statusColor = "green";
-        //statusIcon = <CheckIcon />;
+        customIcon = <AcceptIcon outline size="large"/>
+        statusIcon = <AcceptIcon />;
         statusTitle = "Available";
-    } else if (userPresence === "OutOfOffice, Offline"){
+    } else if (userPresence === "OffWork"){
         statusColor = "purple";
-        //statusIcon = <ArrowBackIcon />;
-        statusTitle = "OutOfOffice";
+        customIcon = <ArrowLeftIcon outline size="large"/>
+        statusTitle = "OffWork";
     } else if (userPresence === "Offline") {
-        statusColor = "grey";
-        //statusIcon = <CloseIcon />;
+        statusColor = theme.siteVariables.colors.grey[300];
+        customIcon = <CloseIcon outline size="large"/>
         statusTitle = "Offline";
     } else if ((userPresence === "Busy") || (userPresence === "InACall") || (userPresence === "InAConferenceCall") || (userPresence === "InAMeeting")){
-        statusColor = "red";
+        statusColor = theme.siteVariables.colors.red[300];
         statusTitle = "Busy";
     } else if ((userPresence === "DoNotDisturb") || (userPresence === "Presenting") || (userPresence === "UrgentInteruptionsOnly")) {
-        statusColor = "red";
-        //statusIcon = <RemoveIcon />
+        statusColor = theme.siteVariables.colors.red[300];
+        customIcon = <SubtractIcon outline size="large"/>
         statusTitle = "DoNotDisturb";
     } else {
         statusColor = "orange";
-        //statusIcon = <ScheduleIcon />;
+        // There is no away icon in the Fluent UI Icons Package
         statusTitle = "Away";
     }
 
@@ -66,14 +68,12 @@ export function MemberCard({ userId, teamId, userImage, userName, userType, user
         status = {
             color: statusColor,
             title: statusTitle,
-            size: "large"
         }
     } else {
         status = {
             color: statusColor,
-            icon: statusIcon,
+            icon: customIcon,
             title: statusTitle,
-            size: "large"
         }
     }
 
