@@ -19,7 +19,8 @@ const config = [{
             path.join(__dirname, "/src/server/server.ts")
         ]
     },
-    mode: debug ? "development" : "production",
+    //mode: debug ? "development" : "production",
+    mode: 'development',
     output: {
         path: path.join(__dirname, "/dist"),
         filename: "[name].js",
@@ -51,7 +52,8 @@ const config = [{
             path.join(__dirname, "/src/client/client.ts")
         ]
     },
-    mode: debug ? "development" : "production",
+    //mode: debug ? "development" : "production",
+    mode: 'development',
     output: {
         path: path.join(__dirname, "/dist/web/scripts"),
         filename: "[name].js",

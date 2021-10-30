@@ -309,7 +309,7 @@ export function ApprovalsView(props) {
                                 ),
                                 disabled: pendingUserApprovals.length === 0 ? true : false
                             },
-                            content: (<Grid columns={3}>
+                            content: (<Grid style={{columnGap:'32px', rowGap:'32px', marginLeft:'16rem', marginRight:'16rem'}} columns={2}>
                                 {
                                     pendingUserApprovals.map(approval => {
                                         return UserCard(approval)
@@ -327,7 +327,7 @@ export function ApprovalsView(props) {
                                 ),
                                 disabled: approvedUserApprovals.length === 0 ? true : false
                             },
-                            content: (<Grid columns={3}>
+                            content: (<Grid style={{columnGap:'32px', rowGap:'32px', marginLeft:'16rem', marginRight:'16rem'}} columns={2}>
                                 {
                                     approvedUserApprovals.map(approval => {
                                         return UserCard(approval)
@@ -345,7 +345,7 @@ export function ApprovalsView(props) {
                                 ),
                                 disabled: rejectedUserApprovals.length === 0 ? true : false
                             },
-                            content: (<Grid columns={3}>
+                            content: (<Grid style={{columnGap:'32px', rowGap:'32px', marginLeft:'16rem', marginRight:'16rem'}} columns={2}>
                                 {
                                     rejectedUserApprovals.map(approval => {
                                         return UserCard(approval)
@@ -374,7 +374,7 @@ export function ApprovalsView(props) {
                                     ),
                                     disabled: pendingApprovals.length === 0 ? true : false
                                 },
-                                content: (<Grid columns={3}>
+                                content: (<Grid style={{columnGap:'32px', rowGap:'32px', marginLeft:'16rem', marginRight:'16rem'}} columns={2}>
                                     {
                                         pendingApprovals.map(approval => {
                                             return ApprovalCard(approval)
@@ -392,7 +392,7 @@ export function ApprovalsView(props) {
                                     ),
                                     disabled: approvedApprovals.length === 0 ? true : false
                                 },
-                                content: (<Grid columns={3}>
+                                content: (<Grid style={{columnGap:'32px', rowGap:'32px', marginLeft:'16rem', marginRight:'16rem'}} columns={2}>
                                     {
                                         approvedApprovals.map(approval => {
                                             return ApprovalCardRevoke(approval)
@@ -410,7 +410,7 @@ export function ApprovalsView(props) {
                                     ),
                                     disabled: rejectedApprovals.length === 0 ? true : false
                                 },
-                                content: (<Grid columns={3}>
+                                content: (<Grid style={{columnGap:'32px', rowGap:'32px', marginLeft:'16rem', marginRight:'16rem'}} columns={2}>
                                     {
                                         rejectedApprovals.map(approval => {
                                             return ApprovalCardApprove(approval)

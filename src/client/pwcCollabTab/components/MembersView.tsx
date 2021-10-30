@@ -12,6 +12,12 @@ import {
 import { InviteDialog } from "./InviteDialog";
 import { MemberCard } from "./uiComponents/MemberCard";
 
+const testUsersRows: any[] = [];
+const testUserCardRows: any[] = [];
+
+const testOwnerRows: any[] = [];
+
+const testPendingRows: any[] = [];
 
 export function MembersView(props) {
     const [ownerRows, setOwnerRows] = useState<any[] | undefined>();
@@ -26,6 +32,9 @@ export function MembersView(props) {
     const teamId = props.teamId;
     const teamName = props.teamName;
     const userType = props.userType;
+
+    const [search, setSearch] = useState('');
+    const [testMemberRows, setTestMemberRows]= useState<any[]>([]);
 
     /** Returns true if the member rows are undefined or not yet populated */
     const isLoading = () => {
@@ -87,6 +96,8 @@ export function MembersView(props) {
         const memberUserRows: any[] = [];
         const pendingUserRows: any[] = [];
 
+        //const testUsersRows: any[] = [];
+
         for (const teamMember of teamMembers) {
             const user = await getUser(
                 token,
@@ -115,6 +126,7 @@ export function MembersView(props) {
                 role = "member";
             }
 
+            testUsersRows.push(user.displayName);
 
             const memberRow = <MemberCard 
                 userId={teamMember.userId}
@@ -131,18 +143,26 @@ export function MembersView(props) {
                 callback={handleDelete}
             />
 
+            testUserCardRows.push(memberRow);
+
             if (teamMember.roles.includes("owner")) {
+                testOwnerRows.push(memberRow);
                 ownerUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             } else if (user.externalUserState === "PendingAcceptance") {
+                testPendingRows.push(memberRow);
                 pendingUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             } else {
+                testMemberRows.push(memberRow);
                 memberUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             }
         }
+        
+        //console.log(testUsersRows);
 
         setOwnerRows(ownerUserRows);
         setMemberRows(memberUserRows);
         setPendingRows(pendingUserRows);
+        //setTestUsers(testUsersRows);
     }, [teamMembers, userType]);
 
     useEffect(() => {
@@ -153,6 +173,7 @@ export function MembersView(props) {
         setOwnerRows([]);
         setMemberRows([]);
         setPendingRows([]);
+        //setTestUsers([]);
         getUsersById();
     }, [teamMembers, userType]);
 
@@ -276,6 +297,71 @@ export function MembersView(props) {
         );
     }
 
+
+
+    const MemberAccordion2 = () => {
+        return (
+            <Accordion activeIndex={activePanels} panels={
+                [
+                    {
+                        title: {
+                            content: (
+                                <span>
+                                    <Text weight="bold" disabled={testOwnerRows?.length === 0 ? true : false} content="Owners " />
+                                    <Text disabled={testOwnerRows?.length === 0 ? true : false} content={`(${testOwnerRows?.length})`} />
+                                </span>
+                            ),
+                            disabled: testOwnerRows?.length === 0 ? true : false,
+                            onClick: () => handlePanelClick(0)
+                        },
+                        content:(
+                            <Flex column gap="gap.smaller">
+                                <CardHeader />
+                                { testOwnerRows?.map(row => row.row) }
+                            </Flex>
+                        )
+                    },
+                    {
+                        title: {
+                            content: (
+                                <span>
+                                    <Text weight="bold" disabled={memberRows?.length === 0 ? true : false} content="Members and Guests " />
+                                    <Text disabled={memberRows?.length === 0 ? true : false} content={`(${memberRows?.length})`} />
+                                </span>
+                            ),
+                            disabled: memberRows?.length === 0 ? true : false,
+                            onClick: () => handlePanelClick(1)
+                        },
+                        content: (
+                            <Flex column gap="gap.smaller">
+                                <CardHeader />
+                                { memberRows?.map(row => row.row) }
+                            </Flex>
+                        )
+                    },
+                    {
+                        title: {
+                            content: (
+                                <span>
+                                    <Text weight="bold" disabled={pendingRows?.length === 0 ? true : false} content="Pending Acceptance " />
+                                    <Text disabled={pendingRows?.length === 0 ? true : false} content={`(${pendingRows?.length})`} />
+                                </span>
+                            ),
+                            disabled: pendingRows?.length === 0 ? true : false,
+                            onClick: () => handlePanelClick(2)
+                        },
+                        content: (
+                            <Flex column gap="gap.smaller">
+                                <CardHeader />
+                                { pendingRows?.map(row => row.row) }
+                            </Flex>
+                        )
+                    }
+                ]
+            } />
+        );
+    }
+
     /** Skeleton replacement for loading Accordion */
     const MemberLoading = () => {
         const CardLoading = () => {
@@ -335,17 +421,73 @@ export function MembersView(props) {
         );
     }
 
-    return (
-        <React.Fragment>
-            <DeleteDialog />
-            <Flex column fill={true} gap="gap.large">
-                <Flex space="between">
-                    <Input icon={<SearchIcon />} placeholder="Search for members" />
-                    { userType === 1 && <InviteDialog token={token} teamId={teamId} teamName={teamName}/> }
+    // If the search bar is empty it will go to if, else it will go to else
+    if ((search == "") || (search == undefined)) {
+        return (
+            <React.Fragment>
+                <DeleteDialog />
+                <Flex column fill={true} gap="gap.large">
+                    <Flex space="between">
+                        <Input icon={<SearchIcon />} clearable placeholder="Search for members" onChange={(e: React.FormEvent<HTMLInputElement>) => {setSearch(e.currentTarget.value)}}/>
+                        
+                        { userType === 1 && <InviteDialog token={token} teamId={teamId} teamName={teamName}/> }
+                    </Flex>
+                      
+                    { isLoading() ? <MemberLoading /> : <MemberAccordion /> }
                 </Flex>
-                { isLoading() ? <MemberLoading /> : <MemberAccordion /> }
-            </Flex>
-        </React.Fragment>
-        
-    );
+            </React.Fragment>
+            
+        );
+    } else {
+        return (
+            <React.Fragment>
+                <DeleteDialog />
+                <Flex column fill={true} gap="gap.large">
+                    <Flex space="between">
+                        <Input icon={<SearchIcon />} clearable placeholder="Search for members" onChange={(e: React.FormEvent<HTMLInputElement>) => {setSearch(e.currentTarget.value)}}/>
+                        
+                        { userType === 1 && <InviteDialog token={token} teamId={teamId} teamName={teamName}/> }
+                    </Flex>
+                    <Flex column gap="gap.medium">
+                    {
+                        testOwnerRows.filter((ownerVal)=> { 
+                            if (ownerVal.props.userName.toLowerCase().includes(search.toLowerCase())) { 
+                                return ownerVal;
+                            } else if (ownerVal.props.userName.toLowerCase().includes(search.toLowerCase())) {
+                                return ownerVal;
+                            } 
+                            }).map((val1, key) => {
+                                return <div> {val1} </div>;
+                        })
+                    }
+                    {
+                        testMemberRows.filter((memberVal)=> { 
+                            if (memberVal.props.userName.toLowerCase().includes(search.toLowerCase())) { 
+                                return memberVal;
+                            } else if (memberVal.props.userName.toLowerCase().includes(search.toLowerCase())) {
+                                
+                                return memberVal;
+                            } 
+                            }).map((val2, key) => {
+                                return <div> {val2} </div>;
+                        })
+                    }
+                    {
+                        testPendingRows.filter((pendingVal)=> { 
+                            if (pendingVal.props.userName.toLowerCase().includes(search.toLowerCase())) { 
+                                return pendingVal;
+                            } else if (pendingVal.props.userName.toLowerCase().includes(search.toLowerCase())) {
+    
+                                return pendingVal;
+                            } 
+                            }).map((val3, key) => {
+                                return <div> {val3} </div>;
+                        })
+                    }
+                    </Flex>
+                </Flex>
+            </React.Fragment>
+            
+        );
+    }
 }
