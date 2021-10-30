@@ -109,6 +109,13 @@ export function MembersView(props) {
             
             let formatStatus = user.externalUserState === "PendingAcceptance" ? "Pending Acceptance" : user.externalUserState;
 
+            // If you want to change the following please confirm with Ankit, this is needed for the User Role to say member
+            let role = teamMember.roles;
+            if (!((teamMember.roles.includes("owner")) || (user.externalUserState === "PendingAcceptance") || (teamMember.roles.includes("guest")))) {
+                role = "member";
+            }
+
+
             const memberRow = <MemberCard 
                 userId={teamMember.userId}
                 teamId={teamMember.id}
@@ -117,7 +124,7 @@ export function MembersView(props) {
                 userType={user.userType}
                 userStatus={formatStatus}
                 dateAdded={createdDate}
-                userRole={teamMember.roles}
+                userRole={role}
                 userEmail={user.mail}
                 userPresence={indivUserPresence.activity}
                 canDelete={userType === 1}

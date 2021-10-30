@@ -1,11 +1,17 @@
 import * as React from "react";
+import { useTeams } from "msteams-react-base-component";
 import { Button, Flex, Text, Avatar, Card, Grid } from "@fluentui/react-northstar";
+
+
+
+
+/* 
 import ScheduleIcon  from '@material-ui/icons/Schedule';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import CloseIcon from '@material-ui/icons/Close';
 import CheckIcon from '@material-ui/icons/Check';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import RemoveIcon from '@material-ui/icons/Remove';
+import RemoveIcon from '@material-ui/icons/Remove'; */
 
 
 type Option = {
@@ -24,32 +30,33 @@ type Option = {
 };
 
 export function MemberCard({ userId, teamId, userImage, userName, userType, userStatus, dateAdded, userRole, userEmail, userPresence, canDelete, callback }: Option) {
+    const [{ theme, context }] = useTeams();
     let statusColor = "";
     let statusIcon;
     let statusTitle = "";
 
     if (userPresence === "Available") {
         statusColor = "green";
-        statusIcon = <CheckIcon />;
+        //statusIcon = <CheckIcon />;
         statusTitle = "Available";
     } else if (userPresence === "OutOfOffice, Offline"){
         statusColor = "purple";
-        statusIcon = <ArrowBackIcon />;
+        //statusIcon = <ArrowBackIcon />;
         statusTitle = "OutOfOffice";
     } else if (userPresence === "Offline") {
         statusColor = "grey";
-        statusIcon = <CloseIcon />;
+        //statusIcon = <CloseIcon />;
         statusTitle = "Offline";
     } else if ((userPresence === "Busy") || (userPresence === "InACall") || (userPresence === "InAConferenceCall") || (userPresence === "InAMeeting")){
         statusColor = "red";
         statusTitle = "Busy";
     } else if ((userPresence === "DoNotDisturb") || (userPresence === "Presenting") || (userPresence === "UrgentInteruptionsOnly")) {
         statusColor = "red";
-        statusIcon = <RemoveIcon />
+        //statusIcon = <RemoveIcon />
         statusTitle = "DoNotDisturb";
     } else {
         statusColor = "orange";
-        statusIcon = <ScheduleIcon />;
+        //statusIcon = <ScheduleIcon />;
         statusTitle = "Away";
     }
 
@@ -103,8 +110,10 @@ export function MemberCard({ userId, teamId, userImage, userName, userType, user
                     <Flex hAlign="end" vAlign="center">
                         {(userRole.includes("guest") && canDelete) && (
                             <Button
+                                primary
                                 size="small"
                                 onClick={() => callback({id: userId, teamId: teamId, name: userName})}
+                                style={{ backgroundColor: theme.siteVariables.colors.red[300] }}  // Sets Button Color to Red, as per UI Mockup
                                 content="Delete"
                             />
                         )}

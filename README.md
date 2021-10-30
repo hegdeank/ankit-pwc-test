@@ -38,8 +38,8 @@ npm install mysql
 
 Install UI Component Packages with these commands:
 ```bash
-npm install --save @fluentui/react-icons-northstar
-npm install @material-ui/core @material-ui/icons
+npm install @fluentui/react-icons-northstar
+npm install @fluentui/react-northstar@0.59.0
 ```
 ## Running the app locally
 
