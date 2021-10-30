@@ -12,17 +12,18 @@ import {
 import { InviteDialog } from "./InviteDialog";
 import { MemberCard } from "./uiComponents/MemberCard";
 
-const testUsersRows: any[] = [];
-const testUserCardRows: any[] = [];
+//const searchOwnerRows: any[] = [];
+//const searchMemberRows: any[] = [];
+//const searchPendingRows: any[] = [];
 
-const testOwnerRows: any[] = [];
-
-const testPendingRows: any[] = [];
 
 export function MembersView(props) {
     const [ownerRows, setOwnerRows] = useState<any[] | undefined>();
     const [memberRows, setMemberRows] = useState<any[] | undefined>();
     const [pendingRows, setPendingRows] = useState<any[] | undefined>();
+    const [searchMemberRows, setSearchMemberRows] =useState<any[]>([]);
+    const [searchOwnerRows, setSearchOwnerRows] =useState<any[]>([]);
+    const [searchPendingRows, setSearchPendingRows] =useState<any[]>([]);
     const [teamMembers, setTeamMembers] = useState<any[]>([]);
     const [activePanels, setActivePanels] = useState<number[]>([]);
     const [dialogOpen, setDialogOpen] = useState<boolean>(false);
@@ -33,8 +34,10 @@ export function MembersView(props) {
     const teamName = props.teamName;
     const userType = props.userType;
 
+    
+
     const [search, setSearch] = useState('');
-    const [testMemberRows, setTestMemberRows]= useState<any[]>([]);
+    //const [testMemberRows, setTestMemberRows]= useState<any[]>([]);
 
     /** Returns true if the member rows are undefined or not yet populated */
     const isLoading = () => {
@@ -96,7 +99,9 @@ export function MembersView(props) {
         const memberUserRows: any[] = [];
         const pendingUserRows: any[] = [];
 
-        //const testUsersRows: any[] = [];
+        const searchbarPendingRows: any[] = [];
+        const searchbarMemberRows: any[] = [];
+        const searchbarOwnerRows: any[] = [];
 
         for (const teamMember of teamMembers) {
             const user = await getUser(
@@ -126,8 +131,6 @@ export function MembersView(props) {
                 role = "member";
             }
 
-            testUsersRows.push(user.displayName);
-
             const memberRow = <MemberCard 
                 userId={teamMember.userId}
                 teamId={teamMember.id}
@@ -143,26 +146,30 @@ export function MembersView(props) {
                 callback={handleDelete}
             />
 
-            testUserCardRows.push(memberRow);
 
             if (teamMember.roles.includes("owner")) {
-                testOwnerRows.push(memberRow);
+                searchbarOwnerRows.push(memberRow);
+                //searchOwnerRows.push(memberRow);
                 ownerUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             } else if (user.externalUserState === "PendingAcceptance") {
-                testPendingRows.push(memberRow);
+                searchbarPendingRows.push(memberRow);
+                //searchPendingRows.push(memberRow);
                 pendingUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             } else {
-                testMemberRows.push(memberRow);
+                searchbarMemberRows.push(memberRow);
+                //searchMemberRows.push(memberRow);
                 memberUserRows.push({id: teamMember.userId, teamId: teamMember.id, row: memberRow});
             }
         }
-        
-        //console.log(testUsersRows);
 
         setOwnerRows(ownerUserRows);
         setMemberRows(memberUserRows);
         setPendingRows(pendingUserRows);
-        //setTestUsers(testUsersRows);
+
+        setSearchMemberRows(searchbarMemberRows);
+        setSearchOwnerRows(searchbarOwnerRows);
+        setSearchPendingRows(searchbarPendingRows);
+
     }, [teamMembers, userType]);
 
     useEffect(() => {
@@ -173,7 +180,6 @@ export function MembersView(props) {
         setOwnerRows([]);
         setMemberRows([]);
         setPendingRows([]);
-        //setTestUsers([]);
         getUsersById();
     }, [teamMembers, userType]);
 
@@ -298,70 +304,6 @@ export function MembersView(props) {
     }
 
 
-
-    const MemberAccordion2 = () => {
-        return (
-            <Accordion activeIndex={activePanels} panels={
-                [
-                    {
-                        title: {
-                            content: (
-                                <span>
-                                    <Text weight="bold" disabled={testOwnerRows?.length === 0 ? true : false} content="Owners " />
-                                    <Text disabled={testOwnerRows?.length === 0 ? true : false} content={`(${testOwnerRows?.length})`} />
-                                </span>
-                            ),
-                            disabled: testOwnerRows?.length === 0 ? true : false,
-                            onClick: () => handlePanelClick(0)
-                        },
-                        content:(
-                            <Flex column gap="gap.smaller">
-                                <CardHeader />
-                                { testOwnerRows?.map(row => row.row) }
-                            </Flex>
-                        )
-                    },
-                    {
-                        title: {
-                            content: (
-                                <span>
-                                    <Text weight="bold" disabled={memberRows?.length === 0 ? true : false} content="Members and Guests " />
-                                    <Text disabled={memberRows?.length === 0 ? true : false} content={`(${memberRows?.length})`} />
-                                </span>
-                            ),
-                            disabled: memberRows?.length === 0 ? true : false,
-                            onClick: () => handlePanelClick(1)
-                        },
-                        content: (
-                            <Flex column gap="gap.smaller">
-                                <CardHeader />
-                                { memberRows?.map(row => row.row) }
-                            </Flex>
-                        )
-                    },
-                    {
-                        title: {
-                            content: (
-                                <span>
-                                    <Text weight="bold" disabled={pendingRows?.length === 0 ? true : false} content="Pending Acceptance " />
-                                    <Text disabled={pendingRows?.length === 0 ? true : false} content={`(${pendingRows?.length})`} />
-                                </span>
-                            ),
-                            disabled: pendingRows?.length === 0 ? true : false,
-                            onClick: () => handlePanelClick(2)
-                        },
-                        content: (
-                            <Flex column gap="gap.smaller">
-                                <CardHeader />
-                                { pendingRows?.map(row => row.row) }
-                            </Flex>
-                        )
-                    }
-                ]
-            } />
-        );
-    }
-
     /** Skeleton replacement for loading Accordion */
     const MemberLoading = () => {
         const CardLoading = () => {
@@ -450,7 +392,7 @@ export function MembersView(props) {
                     </Flex>
                     <Flex column gap="gap.medium">
                     {
-                        testOwnerRows.filter((ownerVal)=> { 
+                        searchOwnerRows.filter((ownerVal)=> { 
                             if (ownerVal.props.userName.toLowerCase().includes(search.toLowerCase())) { 
                                 return ownerVal;
                             } else if (ownerVal.props.userName.toLowerCase().includes(search.toLowerCase())) {
@@ -461,7 +403,7 @@ export function MembersView(props) {
                         })
                     }
                     {
-                        testMemberRows.filter((memberVal)=> { 
+                        searchMemberRows.filter((memberVal)=> { 
                             if (memberVal.props.userName.toLowerCase().includes(search.toLowerCase())) { 
                                 return memberVal;
                             } else if (memberVal.props.userName.toLowerCase().includes(search.toLowerCase())) {
@@ -473,7 +415,7 @@ export function MembersView(props) {
                         })
                     }
                     {
-                        testPendingRows.filter((pendingVal)=> { 
+                        searchPendingRows.filter((pendingVal)=> { 
                             if (pendingVal.props.userName.toLowerCase().includes(search.toLowerCase())) { 
                                 return pendingVal;
                             } else if (pendingVal.props.userName.toLowerCase().includes(search.toLowerCase())) {
